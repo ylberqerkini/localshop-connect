@@ -14,7 +14,289 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      businesses: {
+        Row: {
+          address: string | null
+          cash_on_delivery: boolean | null
+          created_at: string
+          delivery_price: number | null
+          description: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          subdomain: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          cash_on_delivery?: boolean | null
+          created_at?: string
+          delivery_price?: number | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          subdomain: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          cash_on_delivery?: boolean | null
+          created_at?: string
+          delivery_price?: number | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          subdomain?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          business_id: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string
+        }
+        Insert: {
+          address?: string | null
+          business_id: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone: string
+        }
+        Update: {
+          address?: string | null
+          business_id?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          business_id: string
+          city: string | null
+          created_at: string
+          customer_id: string | null
+          delivery_fee: number | null
+          id: string
+          notes: string | null
+          order_number: string
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          city?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivery_fee?: number | null
+          id?: string
+          notes?: string | null
+          order_number: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          city?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivery_fee?: number | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          business_id: string
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +305,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +437,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: [
+        "pending",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+    },
   },
 } as const
