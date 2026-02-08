@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
@@ -114,8 +115,8 @@ const Pricing = () => {
               </ul>
 
               {/* CTA */}
-              <Button variant={plan.variant} size="lg" className="w-full">
-                {plan.cta}
+              <Button variant={plan.variant} size="lg" className="w-full" asChild>
+                <Link to="/auth?mode=signup">{plan.cta}</Link>
               </Button>
             </div>
           ))}

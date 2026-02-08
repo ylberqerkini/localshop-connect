@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Store } from "lucide-react";
 
@@ -29,11 +30,11 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-              Hyr
+            <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+              <Link to="/auth">Hyr</Link>
             </Button>
-            <Button variant="hero" size="sm">
-              Fillo falas
+            <Button variant="hero" size="sm" asChild>
+              <Link to="/auth?mode=signup">Fillo falas</Link>
             </Button>
           </div>
         </div>
