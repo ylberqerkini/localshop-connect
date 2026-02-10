@@ -18,6 +18,7 @@ import Customers from "./pages/dashboard/Customers";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
+import StorePage from "./pages/Store";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,9 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+
+              {/* Public store */}
+              <Route path="/store/:subdomain" element={<StorePage />} />
 
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
