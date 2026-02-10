@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useBusiness } from '@/hooks/useBusiness';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, Edit, Trash2, Package, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRef } from 'react';
 
 interface Product {
   id: string;
@@ -38,6 +39,9 @@ export default function Products() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -103,6 +107,7 @@ export default function Products() {
         is_active: product.is_active,
         category_id: product.category_id || ''
       });
+      setImagePreview(product.image_url || null);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -114,8 +119,53 @@ export default function Products() {
         is_active: true,
         category_id: ''
       });
+      setImagePreview(null);
     }
     setIsDialogOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !business) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Gabim', description: 'Vetëm imazhe lejohen', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Gabim', description: 'Imazhi duhet të jetë më i vogël se 5MB', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${business.id}/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      setImagePreview(publicUrl);
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast({ title: 'Gabim', description: 'Nuk u ngarkua imazhi', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    setImagePreview(null);
   };
 
   const handleSave = async () => {
@@ -384,13 +434,44 @@ export default function Products() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">URL e imazhit</Label>
-              <Input
-                id="image"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
+              <Label>Imazhi i produktit</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
+              {imagePreview ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={removeImage}
+                    type="button"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full aspect-video rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/50 flex flex-col items-center justify-center gap-2 text-muted-foreground transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8" />
+                      <span className="text-sm">Kliko për të ngarkuar</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
