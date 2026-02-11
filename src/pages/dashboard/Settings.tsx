@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Truck, CreditCard, ExternalLink } from 'lucide-react';
+import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell } from 'lucide-react';
 
 export default function Settings() {
   const { business, updateBusiness } = useBusiness();
@@ -22,6 +22,7 @@ export default function Settings() {
     address: '',
     delivery_price: '',
     cash_on_delivery: true,
+    email_notifications: true,
     logo_url: ''
   });
 
@@ -35,6 +36,7 @@ export default function Settings() {
         address: business.address || '',
         delivery_price: String(business.delivery_price || 0),
         cash_on_delivery: business.cash_on_delivery,
+        email_notifications: (business as any).email_notifications ?? true,
         logo_url: business.logo_url || ''
       });
     }
@@ -51,8 +53,9 @@ export default function Settings() {
         address: formData.address || null,
         delivery_price: parseFloat(formData.delivery_price) || 0,
         cash_on_delivery: formData.cash_on_delivery,
-        logo_url: formData.logo_url || null
-      });
+        logo_url: formData.logo_url || null,
+        email_notifications: formData.email_notifications,
+      } as any);
 
       if (error) throw error;
 
@@ -236,6 +239,36 @@ export default function Settings() {
             <Switch
               checked={formData.cash_on_delivery}
               onCheckedChange={(checked) => setFormData({ ...formData, cash_on_delivery: checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Notifications */}
+      <Card className="border-0 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary" />
+            <CardTitle>Njoftimet</CardTitle>
+          </div>
+          <CardDescription>
+            Merr njoftime kur vjen një porosi e re
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Njoftime me email</p>
+                <p className="text-sm text-muted-foreground">
+                  Merr email kur vjen një porosi e re
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={formData.email_notifications}
+              onCheckedChange={(checked) => setFormData({ ...formData, email_notifications: checked })}
             />
           </div>
         </CardContent>

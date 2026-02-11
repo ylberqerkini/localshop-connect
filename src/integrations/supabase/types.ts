@@ -22,6 +22,7 @@ export type Database = {
           delivery_price: number | null
           description: string | null
           email: string | null
+          email_notifications: boolean
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -38,6 +39,7 @@ export type Database = {
           delivery_price?: number | null
           description?: string | null
           email?: string | null
+          email_notifications?: boolean
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -54,6 +56,7 @@ export type Database = {
           delivery_price?: number | null
           description?: string | null
           email?: string | null
+          email_notifications?: boolean
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
