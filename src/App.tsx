@@ -17,6 +17,7 @@ import Products from "./pages/dashboard/Products";
 import Customers from "./pages/dashboard/Customers";
 import Analytics from "./pages/dashboard/Analytics";
 import Settings from "./pages/dashboard/Settings";
+import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
 import StorePage from "./pages/Store";
 
@@ -101,6 +102,16 @@ const App = () => (
                   <ProtectedRoute>
                     <DashboardRoute>
                       <Products />
+                    </DashboardRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/categories"
+                element={
+                  <ProtectedRoute>
+                    <DashboardRoute>
+                      <Categories />
                     </DashboardRoute>
                   </ProtectedRoute>
                 }
