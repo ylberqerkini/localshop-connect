@@ -86,6 +86,22 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
       if (itemsErr) throw itemsErr;
 
+      // Send notification (fire and forget)
+      supabase.functions.invoke('notify-order', {
+        body: {
+          business_id: businessId,
+          order_number: orderNum,
+          customer_name: values.full_name,
+          customer_phone: values.phone,
+          city: values.city,
+          subtotal,
+          delivery_fee: deliveryFee,
+          total,
+          items: items.map(i => ({ product_name: i.name, quantity: i.quantity, unit_price: i.price, total: i.price * i.quantity })),
+          notes: values.notes || undefined,
+        },
+      }).catch(err => console.error('Notification error:', err));
+
       setOrderNumber(orderNum);
       setSuccess(true);
       clearCart();
