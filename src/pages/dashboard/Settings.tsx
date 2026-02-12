@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell } from 'lucide-react';
+import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell, Star } from 'lucide-react';
 
 export default function Settings() {
   const { business, updateBusiness } = useBusiness();
@@ -23,6 +23,7 @@ export default function Settings() {
     delivery_price: '',
     cash_on_delivery: true,
     email_notifications: true,
+    is_featured: false,
     logo_url: ''
   });
 
@@ -37,6 +38,7 @@ export default function Settings() {
         delivery_price: String(business.delivery_price || 0),
         cash_on_delivery: business.cash_on_delivery,
         email_notifications: (business as any).email_notifications ?? true,
+        is_featured: (business as any).is_featured ?? false,
         logo_url: business.logo_url || ''
       });
     }
@@ -55,6 +57,7 @@ export default function Settings() {
         cash_on_delivery: formData.cash_on_delivery,
         logo_url: formData.logo_url || null,
         email_notifications: formData.email_notifications,
+        is_featured: formData.is_featured,
       } as any);
 
       if (error) throw error;
@@ -269,6 +272,36 @@ export default function Settings() {
             <Switch
               checked={formData.email_notifications}
               onCheckedChange={(checked) => setFormData({ ...formData, email_notifications: checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Featured / Promoted */}
+      <Card className="border-0 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-primary" />
+            <CardTitle>Promovimi</CardTitle>
+          </div>
+          <CardDescription>
+            Shfaq dyqanin tënd në seksionin e promovuar të marketplace
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Star className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Dyqan i promovuar</p>
+                <p className="text-sm text-muted-foreground">
+                  Shfaqet në krye të faqes së dyqaneve
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={formData.is_featured}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
             />
           </div>
         </CardContent>

@@ -1,0 +1,1 @@
+ALTER TABLE public.businesses ADD COLUMN is_featured boolean DEFAULT false;

@@ -25,6 +25,7 @@ export type Database = {
           email_notifications: boolean
           id: string
           is_active: boolean | null
+          is_featured: boolean | null
           logo_url: string | null
           name: string
           owner_id: string
@@ -42,6 +43,7 @@ export type Database = {
           email_notifications?: boolean
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
           logo_url?: string | null
           name: string
           owner_id: string
@@ -59,6 +61,7 @@ export type Database = {
           email_notifications?: boolean
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
           logo_url?: string | null
           name?: string
           owner_id?: string

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import { Store, Loader2, Search, MapPin, Package } from 'lucide-react';
+import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface BusinessWithProducts {
@@ -13,7 +13,63 @@ interface BusinessWithProducts {
   logo_url: string | null;
   subdomain: string;
   address: string | null;
+  is_featured: boolean;
   product_count: number;
+}
+
+function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; featured?: boolean }) {
+  return (
+    <Link
+      to={`/store/${biz.subdomain}`}
+      className={`group bg-card rounded-2xl border overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1 ${
+        featured ? 'border-primary/30 ring-1 ring-primary/10' : 'border-border/50'
+      }`}
+    >
+      <div className={`h-32 flex items-center justify-center ${
+        featured
+          ? 'bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5'
+          : 'bg-gradient-to-br from-primary/10 to-accent/10'
+      }`}>
+        {featured && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-semibold">
+            <Star className="h-3 w-3 fill-current" />
+            Promovuar
+          </div>
+        )}
+        {biz.logo_url ? (
+          <img src={biz.logo_url} alt={biz.name} className="h-20 w-20 rounded-xl object-cover shadow-md" />
+        ) : (
+          <div className="h-20 w-20 rounded-xl bg-primary/20 flex items-center justify-center">
+            <Store className="h-10 w-10 text-primary" />
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
+          {biz.name}
+        </h3>
+        {biz.description && (
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{biz.description}</p>
+        )}
+        <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Package className="h-3.5 w-3.5" />
+            {biz.product_count} produkte
+          </span>
+          {biz.address && (
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {biz.address}
+            </span>
+          )}
+        </div>
+        <div className="mt-3 text-xs text-primary font-medium flex items-center gap-1">
+          {biz.subdomain}.eblej.com
+          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 export default function Marketplace() {
@@ -25,7 +81,7 @@ export default function Marketplace() {
     async function load() {
       const { data: bizList } = await supabase
         .from('businesses')
-        .select('id, name, description, logo_url, subdomain, address')
+        .select('id, name, description, logo_url, subdomain, address, is_featured')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -34,7 +90,6 @@ export default function Marketplace() {
         return;
       }
 
-      // Get product counts per business
       const enriched: BusinessWithProducts[] = await Promise.all(
         bizList.map(async (biz) => {
           const { count } = await supabase
@@ -42,7 +97,7 @@ export default function Marketplace() {
             .select('id', { count: 'exact', head: true })
             .eq('business_id', biz.id)
             .eq('is_active', true);
-          return { ...biz, product_count: count ?? 0 };
+          return { ...biz, is_featured: !!(biz as any).is_featured, product_count: count ?? 0 };
         })
       );
 
@@ -58,6 +113,9 @@ export default function Marketplace() {
         b.description?.toLowerCase().includes(search.toLowerCase())
       )
     : businesses;
+
+  const featuredBusinesses = filtered.filter(b => b.is_featured);
+  const regularBusinesses = filtered.filter(b => !b.is_featured);
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +141,6 @@ export default function Marketplace() {
             </div>
           </div>
 
-          {/* Content */}
           {loading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -94,57 +151,36 @@ export default function Marketplace() {
               <p className="text-lg">Nuk u gjet asnjë dyqan.</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map(biz => (
-                <Link
-                  key={biz.id}
-                  to={`/store/${biz.subdomain}`}
-                  className="group bg-card rounded-2xl border border-border/50 overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
-                >
-                  {/* Logo area */}
-                  <div className="h-32 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                    {biz.logo_url ? (
-                      <img
-                        src={biz.logo_url}
-                        alt={biz.name}
-                        className="h-20 w-20 rounded-xl object-cover shadow-md"
-                      />
-                    ) : (
-                      <div className="h-20 w-20 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <Store className="h-10 w-10 text-primary" />
-                      </div>
-                    )}
+            <>
+              {/* Featured businesses */}
+              {featuredBusinesses.length > 0 && (
+                <section className="mb-12">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Star className="h-5 w-5 text-primary fill-primary" />
+                    <h2 className="text-xl font-bold text-foreground">Dyqane të promovuara</h2>
                   </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {featuredBusinesses.map(biz => (
+                      <BusinessCard key={biz.id} biz={biz} featured />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-                  {/* Info */}
-                  <div className="p-5">
-                    <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                      {biz.name}
-                    </h3>
-                    {biz.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {biz.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Package className="h-3.5 w-3.5" />
-                        {biz.product_count} produkte
-                      </span>
-                      {biz.address && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {biz.address}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-3 text-xs text-primary font-medium">
-                      {biz.subdomain}.eblej.com →
-                    </div>
+              {/* All businesses */}
+              {regularBusinesses.length > 0 && (
+                <section>
+                  {featuredBusinesses.length > 0 && (
+                    <h2 className="text-xl font-bold text-foreground mb-6">Të gjitha dyqanet</h2>
+                  )}
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {regularBusinesses.map(biz => (
+                      <BusinessCard key={biz.id} biz={biz} />
+                    ))}
                   </div>
-                </Link>
-              ))}
-            </div>
+                </section>
+              )}
+            </>
           )}
         </div>
       </main>
