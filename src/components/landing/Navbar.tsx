@@ -17,6 +17,9 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
+            <Link to="/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
+              Dyqanet
+            </Link>
             <a href="#si-funksionon" className="text-muted-foreground hover:text-foreground transition-colors">
               Si funksionon
             </a>

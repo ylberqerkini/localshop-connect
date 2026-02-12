@@ -20,6 +20,7 @@ import Settings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
 import StorePage from "./pages/Store";
+import Marketplace from "./pages/Marketplace";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
               {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/marketplace" element={<Marketplace />} />
 
               {/* Dashboard routes */}
               <Route
