@@ -86,15 +86,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="px-4 py-3 border-b">
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="font-medium text-sm truncate">{business.name}</p>
-                <a
-                  href={`https://${business.subdomain}.eblej.com`}
+                <Link
+                  to={`/store/${business.subdomain}`}
                   target="_blank"
-                  rel="noopener noreferrer"
                   className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mt-1"
                 >
                   {business.subdomain}.eblej.com
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </Link>
               </div>
             </div>
           )}
