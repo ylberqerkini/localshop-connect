@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight } from 'lucide-react';
+import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight, UtensilsCrossed, Shirt, Cpu, ShoppingCart, Pill, Sparkles, Wrench, MoreHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface BusinessWithProducts {
   id: string;
@@ -14,8 +15,20 @@ interface BusinessWithProducts {
   subdomain: string;
   address: string | null;
   is_featured: boolean;
+  business_category: string;
   product_count: number;
 }
+
+const CATEGORIES: Record<string, { label: string; icon: React.ElementType }> = {
+  restaurant: { label: 'Restorante', icon: UtensilsCrossed },
+  clothing: { label: 'Veshje', icon: Shirt },
+  electronics: { label: 'Elektronikë', icon: Cpu },
+  market: { label: 'Market', icon: ShoppingCart },
+  pharmacy: { label: 'Farmaci', icon: Pill },
+  beauty: { label: 'Bukuri', icon: Sparkles },
+  services: { label: 'Shërbime', icon: Wrench },
+  other: { label: 'Të tjera', icon: MoreHorizontal },
+};
 
 function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; featured?: boolean }) {
   return (
@@ -25,7 +38,7 @@ function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; fe
         featured ? 'border-primary/30 ring-1 ring-primary/10' : 'border-border/50'
       }`}
     >
-      <div className={`h-32 flex items-center justify-center ${
+      <div className={`h-32 relative flex items-center justify-center ${
         featured
           ? 'bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5'
           : 'bg-gradient-to-br from-primary/10 to-accent/10'
@@ -76,12 +89,13 @@ export default function Marketplace() {
   const [businesses, setBusinesses] = useState<BusinessWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       const { data: bizList } = await supabase
         .from('businesses')
-        .select('id, name, description, logo_url, subdomain, address, is_featured')
+        .select('id, name, description, logo_url, subdomain, address, is_featured, business_category')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -97,7 +111,12 @@ export default function Marketplace() {
             .select('id', { count: 'exact', head: true })
             .eq('business_id', biz.id)
             .eq('is_active', true);
-          return { ...biz, is_featured: !!(biz as any).is_featured, product_count: count ?? 0 };
+          return {
+            ...biz,
+            is_featured: !!biz.is_featured,
+            business_category: (biz as any).business_category || 'other',
+            product_count: count ?? 0,
+          };
         })
       );
 
@@ -107,15 +126,31 @@ export default function Marketplace() {
     load();
   }, []);
 
-  const filtered = search.trim()
-    ? businesses.filter(b =>
-        b.name.toLowerCase().includes(search.toLowerCase()) ||
-        b.description?.toLowerCase().includes(search.toLowerCase())
-      )
-    : businesses;
+  const filtered = businesses.filter(b => {
+    const matchesSearch = !search.trim() ||
+      b.name.toLowerCase().includes(search.toLowerCase()) ||
+      b.description?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !activeCategory || b.business_category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const featuredBusinesses = filtered.filter(b => b.is_featured);
   const regularBusinesses = filtered.filter(b => !b.is_featured);
+
+  // Group regular businesses by category
+  const groupedByCategory = Object.entries(CATEGORIES).reduce<Record<string, BusinessWithProducts[]>>(
+    (acc, [key]) => {
+      const bizsInCat = regularBusinesses.filter(b => b.business_category === key);
+      if (bizsInCat.length > 0) acc[key] = bizsInCat;
+      return acc;
+    },
+    {}
+  );
+
+  // Categories that have businesses (for filter pills)
+  const availableCategories = Object.keys(CATEGORIES).filter(key =>
+    businesses.some(b => b.business_category === key)
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,7 +165,7 @@ export default function Marketplace() {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
               Shfleto bizneset lokale dhe porosit online direkt nga dyqani i tyre.
             </p>
-            <div className="max-w-md mx-auto relative">
+            <div className="max-w-md mx-auto relative mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Kërko dyqane..."
@@ -139,6 +174,36 @@ export default function Marketplace() {
                 className="pl-10"
               />
             </div>
+
+            {/* Category filter pills */}
+            {availableCategories.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  variant={activeCategory === null ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveCategory(null)}
+                  className="rounded-full"
+                >
+                  Të gjitha
+                </Button>
+                {availableCategories.map(key => {
+                  const cat = CATEGORIES[key];
+                  const Icon = cat.icon;
+                  return (
+                    <Button
+                      key={key}
+                      variant={activeCategory === key ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveCategory(activeCategory === key ? null : key)}
+                      className="rounded-full gap-1.5"
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {cat.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -167,18 +232,44 @@ export default function Marketplace() {
                 </section>
               )}
 
-              {/* All businesses */}
-              {regularBusinesses.length > 0 && (
+              {/* Businesses grouped by category */}
+              {activeCategory ? (
+                // Single category view
                 <section>
-                  {featuredBusinesses.length > 0 && (
-                    <h2 className="text-xl font-bold text-foreground mb-6">Të gjitha dyqanet</h2>
-                  )}
+                  <div className="flex items-center gap-2 mb-6">
+                    {(() => {
+                      const Icon = CATEGORIES[activeCategory]?.icon || Store;
+                      return <Icon className="h-5 w-5 text-primary" />;
+                    })()}
+                    <h2 className="text-xl font-bold text-foreground">
+                      {CATEGORIES[activeCategory]?.label || activeCategory}
+                    </h2>
+                  </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {regularBusinesses.map(biz => (
                       <BusinessCard key={biz.id} biz={biz} />
                     ))}
                   </div>
                 </section>
+              ) : (
+                // All categories view
+                Object.entries(groupedByCategory).map(([catKey, bizList]) => {
+                  const cat = CATEGORIES[catKey];
+                  const Icon = cat?.icon || Store;
+                  return (
+                    <section key={catKey} className="mb-12">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Icon className="h-5 w-5 text-primary" />
+                        <h2 className="text-xl font-bold text-foreground">{cat?.label || catKey}</h2>
+                      </div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {bizList.map(biz => (
+                          <BusinessCard key={biz.id} biz={biz} />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })
               )}
             </>
           )}

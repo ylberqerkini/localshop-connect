@@ -5,9 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell, Star } from 'lucide-react';
+import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell, Star, Tag } from 'lucide-react';
+
+const BUSINESS_CATEGORIES = [
+  { value: 'restaurant', label: 'Restorant' },
+  { value: 'clothing', label: 'Veshje' },
+  { value: 'electronics', label: 'Elektronikë' },
+  { value: 'market', label: 'Market' },
+  { value: 'pharmacy', label: 'Farmaci' },
+  { value: 'beauty', label: 'Bukuri' },
+  { value: 'services', label: 'Shërbime' },
+  { value: 'other', label: 'Të tjera' },
+];
 
 export default function Settings() {
   const { business, updateBusiness } = useBusiness();
@@ -24,6 +36,7 @@ export default function Settings() {
     cash_on_delivery: true,
     email_notifications: true,
     is_featured: false,
+    business_category: 'other',
     logo_url: ''
   });
 
@@ -39,6 +52,7 @@ export default function Settings() {
         cash_on_delivery: business.cash_on_delivery,
         email_notifications: (business as any).email_notifications ?? true,
         is_featured: (business as any).is_featured ?? false,
+        business_category: (business as any).business_category || 'other',
         logo_url: business.logo_url || ''
       });
     }
@@ -58,6 +72,7 @@ export default function Settings() {
         logo_url: formData.logo_url || null,
         email_notifications: formData.email_notifications,
         is_featured: formData.is_featured,
+        business_category: formData.business_category,
       } as any);
 
       if (error) throw error;
@@ -148,6 +163,23 @@ export default function Settings() {
               placeholder="Përshkruani biznesin tuaj..."
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Kategoria e biznesit</Label>
+            <Select
+              value={formData.business_category}
+              onValueChange={(value) => setFormData({ ...formData, business_category: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Zgjidh kategorinë" />
+              </SelectTrigger>
+              <SelectContent>
+                {BUSINESS_CATEGORIES.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
