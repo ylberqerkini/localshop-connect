@@ -17,6 +17,7 @@ export type Database = {
       businesses: {
         Row: {
           address: string | null
+          business_category: string | null
           cash_on_delivery: boolean | null
           created_at: string
           delivery_price: number | null
@@ -35,6 +36,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          business_category?: string | null
           cash_on_delivery?: boolean | null
           created_at?: string
           delivery_price?: number | null
@@ -53,6 +55,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          business_category?: string | null
           cash_on_delivery?: boolean | null
           created_at?: string
           delivery_price?: number | null
