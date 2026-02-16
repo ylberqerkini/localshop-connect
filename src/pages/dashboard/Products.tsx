@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus, Search, Edit, Trash2, Package, Loader2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
+import { ShareProduct } from '@/components/dashboard/ShareProduct';
 
 interface Product {
   id: string;
@@ -348,6 +349,12 @@ export default function Products() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
+                    <ShareProduct
+                      productName={product.name}
+                      productPrice={Number(product.price)}
+                      productImage={product.image_url}
+                      storeUrl={`${window.location.origin}/store/${business?.subdomain}`}
+                    />
                     <Button
                       variant="ghost"
                       size="icon"
