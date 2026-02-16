@@ -5,6 +5,7 @@ import { CartProvider } from '@/hooks/useCart';
 import { ProductCard } from '@/components/store/ProductCard';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { CheckoutForm } from '@/components/store/CheckoutForm';
+import ProductDetail from '@/pages/ProductDetail';
 import { Store as StoreIcon, Loader2 } from 'lucide-react';
 
 interface Business {
@@ -32,7 +33,7 @@ interface Category {
 }
 
 function StoreContent() {
-  const { subdomain } = useParams<{ subdomain: string }>();
+  const { subdomain, productId } = useParams<{ subdomain: string; productId?: string }>();
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -89,6 +90,11 @@ function StoreContent() {
         <p className="text-muted-foreground">Kjo faqe nuk ekziston ose nuk është aktive.</p>
       </div>
     );
+  }
+
+  // If viewing a specific product, render ProductDetail
+  if (productId) {
+    return <ProductDetail />;
   }
 
   const filtered = selectedCategory
@@ -158,7 +164,7 @@ function StoreContent() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map(product => (
-              <ProductCard key={product.id} {...product} />
+              <ProductCard key={product.id} {...product} subdomain={subdomain} />
             ))}
           </div>
         )}
