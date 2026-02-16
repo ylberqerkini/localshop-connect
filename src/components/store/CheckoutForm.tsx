@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2, 'Emri duhet të ketë të paktën 2 karaktere').max(100),
@@ -30,9 +31,9 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ open, onClose, businessId, deliveryFee }: CheckoutFormProps) {
   const { items, subtotal, clearCart } = useCart();
+  const { subdomain } = useParams<{ subdomain: string }>();
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema),
@@ -104,9 +105,9 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
         },
       }).catch(err => console.error('Notification error:', err));
 
-      setOrderNumber(orderNum);
-      setSuccess(true);
       clearCart();
+      onClose();
+      navigate(`/store/${subdomain}/order/${orderNum}`);
     } catch (err) {
       console.error('Checkout error:', err);
     } finally {
@@ -115,8 +116,6 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
   };
 
   const handleClose = () => {
-    setSuccess(false);
-    setOrderNumber('');
     form.reset();
     onClose();
   };
@@ -124,19 +123,9 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        {success ? (
-          <div className="py-8 text-center space-y-4">
-            <CheckCircle className="h-16 w-16 text-success mx-auto" />
-            <DialogTitle className="text-xl">Porosia u dërgua!</DialogTitle>
-            <p className="text-muted-foreground">Numri i porosisë: <span className="font-mono font-bold text-foreground">{orderNumber}</span></p>
-            <p className="text-sm text-muted-foreground">Do të kontaktoheni së shpejti për konfirmimin.</p>
-            <Button onClick={handleClose} className="mt-4">Mbyll</Button>
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>Përfundo porosinë</DialogTitle>
-            </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Përfundo porosinë</DialogTitle>
+        </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField control={form.control} name="full_name" render={({ field }) => (
@@ -189,8 +178,6 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
                 </Button>
               </form>
             </Form>
-          </>
-        )}
       </DialogContent>
     </Dialog>
   );

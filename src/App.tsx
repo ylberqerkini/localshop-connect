@@ -21,6 +21,8 @@ import Settings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
 import StorePage from "./pages/Store";
+import ProductDetail from "./pages/ProductDetail";
+import OrderConfirmation from "./pages/OrderConfirmation";
 import Marketplace from "./pages/Marketplace";
 import PlatformFees from "./pages/admin/PlatformFees";
 
@@ -183,6 +185,8 @@ const App = () => (
 
               {/* Public store */}
               <Route path="/store/:subdomain" element={<StorePage />} />
+              <Route path="/store/:subdomain/product/:productId" element={<StorePage />} />
+              <Route path="/store/:subdomain/order/:orderNumber" element={<OrderConfirmation />} />
 
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
