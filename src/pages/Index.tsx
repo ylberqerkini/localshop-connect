@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
+import CategorySearch from "@/components/landing/CategorySearch";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Benefits from "@/components/landing/Benefits";
 import SubdomainPreview from "@/components/landing/SubdomainPreview";
@@ -25,6 +26,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
+        <CategorySearch />
         <HowItWorks />
         <Benefits />
         <SubdomainPreview />

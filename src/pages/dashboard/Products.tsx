@@ -495,6 +495,22 @@ export default function Products() {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label>Kategoria</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(v) => setFormData({ ...formData, category_id: v === 'none' ? '' : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Zgjidh kategorinë" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Pa kategori</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center justify-between">
               <Label htmlFor="active">Produkt aktiv</Label>
               <Switch
