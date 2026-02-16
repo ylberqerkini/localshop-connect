@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
-import CategorySearch from "@/components/landing/CategorySearch";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Benefits from "@/components/landing/Benefits";
 import SubdomainPreview from "@/components/landing/SubdomainPreview";
@@ -26,7 +25,6 @@ const Index = () => {
     }
   }, [location.hash]);
 
-  // Scroll to top on view change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [view]);
@@ -36,10 +34,7 @@ const Index = () => {
       <Navbar view={view} onViewChange={setView} />
       <main>
         {view === "buyer" ? (
-          <>
-            <BuyerHero />
-            <CategorySearch />
-          </>
+          <BuyerHero />
         ) : (
           <>
             <HeroSection />
