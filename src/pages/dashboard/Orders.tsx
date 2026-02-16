@@ -266,9 +266,19 @@ export default function Orders() {
                       <span>€{Number(item.total).toFixed(2)}</span>
                     </div>
                   ))}
-                  <div className="border-t pt-2 flex justify-between font-medium">
-                    <span>Totali</span>
-                    <span>€{Number(selectedOrder.total).toFixed(2)}</span>
+                  <div className="border-t pt-2 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>Nëntotali</span>
+                      <span>€{Number(selectedOrder.total - (selectedOrder as any).delivery_fee - (selectedOrder as any).platform_fee).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Tarifë platforme</span>
+                      <span>€{Number((selectedOrder as any).platform_fee || 1).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium">
+                      <span>Totali</span>
+                      <span>€{Number(selectedOrder.total).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>

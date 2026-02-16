@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN platform_fee numeric NOT NULL DEFAULT 1.00;

@@ -8,6 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 interface Stats {
   totalOrders: number;
   totalRevenue: number;
+  totalPlatformFees: number;
   ordersToday: number;
   totalCustomers: number;
 }
@@ -23,6 +24,7 @@ export default function Overview() {
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     totalRevenue: 0,
+    totalPlatformFees: 0,
     ordersToday: 0,
     totalCustomers: 0
   });
@@ -37,7 +39,7 @@ export default function Overview() {
         // Fetch total orders and revenue
         const { data: orders } = await supabase
           .from('orders')
-          .select('total, created_at')
+          .select('total, platform_fee, created_at')
           .eq('business_id', business.id);
 
         const today = new Date().toISOString().split('T')[0];
@@ -46,6 +48,7 @@ export default function Overview() {
         ).length || 0;
 
         const totalRevenue = orders?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
+        const totalPlatformFees = orders?.reduce((sum, o) => sum + Number(o.platform_fee || 0), 0) || 0;
 
         // Fetch customers count
         const { count: customersCount } = await supabase
@@ -56,6 +59,7 @@ export default function Overview() {
         setStats({
           totalOrders: orders?.length || 0,
           totalRevenue,
+          totalPlatformFees,
           ordersToday,
           totalCustomers: customersCount || 0
         });
@@ -101,6 +105,13 @@ export default function Overview() {
       icon: DollarSign,
       change: '+8%',
       trend: 'up'
+    },
+    {
+      title: 'Tarifë platforme',
+      value: `€${stats.totalPlatformFees.toFixed(2)}`,
+      icon: DollarSign,
+      change: `${stats.totalOrders} porosi`,
+      trend: 'neutral'
     },
     {
       title: 'Porosi sot',
