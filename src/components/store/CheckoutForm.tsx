@@ -89,6 +89,15 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
       if (itemsErr) throw itemsErr;
 
+      // Log commission
+      await supabase.from('commission_logs').insert({
+        order_id: order.id,
+        business_id: businessId,
+        order_number: orderNum,
+        order_total: total,
+        commission_amount: platformFee,
+      });
+
       // Send notification (fire and forget)
       supabase.functions.invoke('notify-order', {
         body: {
