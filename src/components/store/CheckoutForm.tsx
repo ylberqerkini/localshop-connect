@@ -52,6 +52,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
         .single();
       if (custErr) throw custErr;
 
+      const platformFee = 1.00;
       const total = subtotal + deliveryFee;
       const orderNum = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
@@ -64,6 +65,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
           order_number: orderNum,
           subtotal,
           delivery_fee: deliveryFee,
+          platform_fee: platformFee,
           total,
           city: values.city,
           notes: values.notes || null,

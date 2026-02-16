@@ -199,6 +199,7 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string
+          platform_fee: number
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
@@ -213,6 +214,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number: string
+          platform_fee?: number
           status?: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
@@ -227,6 +229,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          platform_fee?: number
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number
