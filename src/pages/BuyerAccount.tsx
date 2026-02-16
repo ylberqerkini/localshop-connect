@@ -8,9 +8,71 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Heart, Package, User, LogOut, Loader2 } from 'lucide-react';
+import { ArrowLeft, Heart, Package, User, LogOut, Loader2, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+function ChangePasswordSection() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleChangePassword = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (newPassword.length < 6) {
+      setError('Fjalëkalimi i ri duhet të ketë të paktën 6 karaktere');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Fjalëkalimet nuk përputhen');
+      return;
+    }
+
+    setSaving(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setSaving(false);
+
+    if (updateError) {
+      setError(updateError.message);
+    } else {
+      setSuccess('Fjalëkalimi u ndryshua me sukses!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast({ title: 'Fjalëkalimi u ndryshua me sukses!' });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ndrysho fjalëkalimin</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Fjalëkalimi i ri</Label>
+          <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Fjalëkalimi i ri" />
+        </div>
+        <div className="space-y-2">
+          <Label>Konfirmo fjalëkalimin e ri</Label>
+          <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Konfirmo fjalëkalimin" />
+        </div>
+        {error && <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">{error}</div>}
+        {success && <div className="bg-green-100 text-green-700 text-sm p-3 rounded-lg">{success}</div>}
+        <Button onClick={handleChangePassword} disabled={saving} className="w-full">
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Ndrysho fjalëkalimin
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function BuyerAccount() {
   const { user, signOut } = useAuth();
@@ -138,18 +200,24 @@ export default function BuyerAccount() {
         </div>
 
         <Tabs defaultValue="wishlist">
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="wishlist" className="gap-2">
               <Heart className="h-4 w-4" />
-              Dëshirat ({wishlistItems.length})
+              <span className="hidden sm:inline">Dëshirat ({wishlistItems.length})</span>
+              <span className="sm:hidden">{wishlistItems.length}</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <Package className="h-4 w-4" />
-              Porositë ({orders.length})
+              <span className="hidden sm:inline">Porositë ({orders.length})</span>
+              <span className="sm:hidden">{orders.length}</span>
             </TabsTrigger>
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
-              Profili
+              <span className="hidden sm:inline">Profili</span>
+            </TabsTrigger>
+            <TabsTrigger value="password" className="gap-2">
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Fjalëkalimi</span>
             </TabsTrigger>
           </TabsList>
 
@@ -270,6 +338,10 @@ export default function BuyerAccount() {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="password" className="mt-6">
+            <ChangePasswordSection />
           </TabsContent>
         </Tabs>
       </div>
