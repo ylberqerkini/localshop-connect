@@ -8,12 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Store, ShoppingCart, Loader2, LayoutDashboard, LogOut, Ban, CheckCircle, Megaphone, Plus, Trash2, Users } from 'lucide-react';
+import { DollarSign, Store, ShoppingCart, Loader2, LayoutDashboard, LogOut, Ban, CheckCircle, Megaphone, Plus, Trash2, Users, Tag, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 
 interface BusinessRow {
   id: string;
@@ -34,13 +36,27 @@ interface Announcement {
   created_at: string;
 }
 
+interface PlatformCat {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  icon: string | null;
+  is_active: boolean;
+  sort_order: number;
+}
+
 export default function AdminDashboard() {
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [allCategories, setAllCategories] = useState<PlatformCat[]>([]);
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ orders: 0, fees: 0, revenue: 0, sellers: 0, activeSellers: 0 });
   const [announcementDialog, setAnnouncementDialog] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '' });
+  const [catDialog, setCatDialog] = useState(false);
+  const [editingCat, setEditingCat] = useState<PlatformCat | null>(null);
+  const [catForm, setCatForm] = useState({ name: '', slug: '', parent_id: '', icon: '', sort_order: '0' });
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { toast } = useToast();
@@ -48,15 +64,17 @@ export default function AdminDashboard() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
-    const [ordersRes, bizRes, annRes] = await Promise.all([
+    const [ordersRes, bizRes, annRes, catRes] = await Promise.all([
       supabase.from('orders').select('business_id, total, platform_fee'),
       supabase.from('businesses').select('id, name, subdomain, is_active, is_suspended, owner_id'),
       supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+      supabase.from('platform_categories').select('*').order('sort_order'),
     ]);
 
     const orders = ordersRes.data || [];
     const bizList = bizRes.data || [];
     setAnnouncements((annRes.data as Announcement[]) || []);
+    setAllCategories((catRes.data as PlatformCat[]) || []);
 
     const bizMap: Record<string, { orders: number; fees: number }> = {};
     orders.forEach(o => {
@@ -103,6 +121,46 @@ export default function AdminDashboard() {
     await supabase.from('announcements').delete().eq('id', id);
     fetchData();
   };
+
+  // Category management
+  const openCatDialog = (cat?: PlatformCat) => {
+    if (cat) {
+      setEditingCat(cat);
+      setCatForm({ name: cat.name, slug: cat.slug, parent_id: cat.parent_id || '', icon: cat.icon || '', sort_order: String(cat.sort_order) });
+    } else {
+      setEditingCat(null);
+      setCatForm({ name: '', slug: '', parent_id: '', icon: '', sort_order: '0' });
+    }
+    setCatDialog(true);
+  };
+
+  const saveCat = async () => {
+    if (!catForm.name || !catForm.slug) return;
+    const payload = {
+      name: catForm.name,
+      slug: catForm.slug,
+      parent_id: catForm.parent_id || null,
+      icon: catForm.icon || null,
+      sort_order: parseInt(catForm.sort_order) || 0,
+    };
+    if (editingCat) {
+      await supabase.from('platform_categories').update(payload).eq('id', editingCat.id);
+      toast({ title: 'Kategoria u përditësua' });
+    } else {
+      await supabase.from('platform_categories').insert(payload);
+      toast({ title: 'Kategoria u krijua' });
+    }
+    setCatDialog(false);
+    fetchData();
+  };
+
+  const toggleCatActive = async (cat: PlatformCat) => {
+    await supabase.from('platform_categories').update({ is_active: !cat.is_active }).eq('id', cat.id);
+    fetchData();
+  };
+
+  const rootCategories = allCategories.filter(c => !c.parent_id);
+  const getChildren = (parentId: string) => allCategories.filter(c => c.parent_id === parentId);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -151,6 +209,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="sellers">
           <TabsList>
             <TabsTrigger value="sellers">Shitësit</TabsTrigger>
+            <TabsTrigger value="categories">Kategoritë</TabsTrigger>
             <TabsTrigger value="announcements">Njoftimet</TabsTrigger>
           </TabsList>
 
@@ -197,6 +256,75 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="categories">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => openCatDialog()} className="gap-2">
+                <Plus className="h-4 w-4" /> Shto kategori
+              </Button>
+            </div>
+            <Card className="border-0 shadow-soft">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Emri</TableHead>
+                      <TableHead>Slug</TableHead>
+                      <TableHead>Prindi</TableHead>
+                      <TableHead className="text-center">Rendi</TableHead>
+                      <TableHead>Statusi</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rootCategories.map(root => (
+                      <>
+                        <TableRow key={root.id} className="bg-muted/30">
+                          <TableCell className="font-semibold flex items-center gap-2">
+                            {(() => { const Icon = getCategoryIcon(root.icon); return <Icon className="h-4 w-4 text-primary" />; })()}
+                            {root.name}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{root.slug}</TableCell>
+                          <TableCell>—</TableCell>
+                          <TableCell className="text-center">{root.sort_order}</TableCell>
+                          <TableCell>
+                            <Badge variant={root.is_active ? 'default' : 'secondary'}>{root.is_active ? 'Aktiv' : 'Joaktiv'}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 justify-end">
+                              <Button variant="ghost" size="icon" onClick={() => openCatDialog(root)}><Pencil className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => toggleCatActive(root)}>
+                                {root.is_active ? <Ban className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {getChildren(root.id).map(sub => (
+                          <TableRow key={sub.id}>
+                            <TableCell className="pl-10 text-sm">{sub.name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{sub.slug}</TableCell>
+                            <TableCell className="text-xs">{root.name}</TableCell>
+                            <TableCell className="text-center">{sub.sort_order}</TableCell>
+                            <TableCell>
+                              <Badge variant={sub.is_active ? 'default' : 'secondary'} className="text-xs">{sub.is_active ? 'Aktiv' : 'Joaktiv'}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 justify-end">
+                                <Button variant="ghost" size="icon" onClick={() => openCatDialog(sub)}><Pencil className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => toggleCatActive(sub)}>
+                                  {sub.is_active ? <Ban className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="announcements">
             <div className="flex justify-end mb-4">
               <Button onClick={() => setAnnouncementDialog(true)} className="gap-2">
@@ -230,6 +358,7 @@ export default function AdminDashboard() {
         </Tabs>
       </main>
 
+      {/* Announcement dialog */}
       <Dialog open={announcementDialog} onOpenChange={setAnnouncementDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>Njoftim i ri</DialogTitle></DialogHeader>
@@ -246,6 +375,49 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAnnouncementDialog(false)}>Anulo</Button>
             <Button onClick={createAnnouncement}>Krijo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category dialog */}
+      <Dialog open={catDialog} onOpenChange={setCatDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingCat ? 'Ndrysho Kategorinë' : 'Kategori e Re'}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Emri</Label>
+              <Input value={catForm.name} onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))} placeholder="p.sh. Veshje Sportive" />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug (URL)</Label>
+              <Input value={catForm.slug} onChange={e => setCatForm(f => ({ ...f, slug: e.target.value }))} placeholder="p.sh. veshje-sportive" />
+            </div>
+            <div className="space-y-2">
+              <Label>Kategoria prindërore</Label>
+              <Select value={catForm.parent_id || 'none'} onValueChange={v => setCatForm(f => ({ ...f, parent_id: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Asnjë (kryesore)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Asnjë (kryesore)</SelectItem>
+                  {rootCategories.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Ikona</Label>
+                <Input value={catForm.icon} onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="p.sh. shirt" />
+              </div>
+              <div className="space-y-2">
+                <Label>Rendi</Label>
+                <Input type="number" value={catForm.sort_order} onChange={e => setCatForm(f => ({ ...f, sort_order: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCatDialog(false)}>Anulo</Button>
+            <Button onClick={saveCat}>{editingCat ? 'Ruaj' : 'Krijo'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
