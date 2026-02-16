@@ -26,6 +26,7 @@ const signupSchema = authSchema.extend({
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const isSignUp = searchParams.get('mode') === 'signup';
+  const isBuyer = searchParams.get('role') === 'buyer';
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
 
@@ -39,9 +40,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate(isBuyer ? '/account' : '/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isBuyer]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,18 +123,18 @@ export default function Auth() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">
-              {isSignUp ? 'Krijo llogarinë' : 'Hyr në llogari'}
+              {isSignUp ? (isBuyer ? 'Krijo llogarinë' : 'Krijo llogarinë biznesi') : 'Hyr në llogari'}
             </CardTitle>
             <CardDescription>
               {isSignUp
-                ? 'Fillo të shesësh online sot'
-                : 'Menaxho biznesin tënd online'}
+                ? (isBuyer ? 'Regjistrohu për të ndjekur porosit dhe dëshirat' : 'Fillo të shesësh online sot')
+                : (isBuyer ? 'Hyr për të parë porosit dhe dëshirat' : 'Menaxho biznesin tënd online')}
             </CardDescription>
           </CardHeader>
 
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              {isSignUp && (
+              {isSignUp && !isBuyer && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="businessName">Emri i biznesit</Label>
@@ -246,14 +247,14 @@ export default function Auth() {
                 {isSignUp ? (
                   <>
                     Ke llogari?{' '}
-                    <Link to="/auth" className="text-primary hover:underline">
+                    <Link to={`/auth${isBuyer ? '?role=buyer' : ''}`} className="text-primary hover:underline">
                       Hyr këtu
                     </Link>
                   </>
                 ) : (
                   <>
                     Nuk ke llogari?{' '}
-                    <Link to="/auth?mode=signup" className="text-primary hover:underline">
+                    <Link to={`/auth?mode=signup${isBuyer ? '&role=buyer' : ''}`} className="text-primary hover:underline">
                       Regjistrohu falas
                     </Link>
                   </>

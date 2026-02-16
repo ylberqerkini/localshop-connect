@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Store, ArrowLeftRight, Menu, X } from "lucide-react";
+import { Store, ArrowLeftRight, Menu, X, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavbarProps {
   view?: "buyer" | "business";
@@ -11,6 +12,7 @@ interface NavbarProps {
 const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
   const isBusiness = view === "business";
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   const closeMenu = () => setMobileOpen(false);
 
@@ -68,6 +70,25 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
                 </Button>
               </>
             )}
+            {!isBusiness && (
+              user ? (
+                <Button variant="ghost" size="sm" className="gap-2" asChild>
+                  <Link to="/account">
+                    <User className="w-4 h-4" />
+                    Llogaria
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/auth?role=buyer">Hyr</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" asChild>
+                    <Link to="/auth?mode=signup&role=buyer">Regjistrohu</Link>
+                  </Button>
+                </>
+              )
+            )}
           </div>
 
           {/* Mobile: toggle + hamburger */}
@@ -118,6 +139,27 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
                 <Button variant="hero" size="sm" asChild>
                   <Link to="/auth?mode=signup" onClick={closeMenu}>Regjistro biznesin</Link>
                 </Button>
+              </div>
+            )}
+            {!isBusiness && (
+              <div className="pt-3 mt-3 border-t border-border/50 flex flex-col gap-2">
+                {user ? (
+                  <Button variant="ghost" size="sm" className="justify-start gap-2" asChild>
+                    <Link to="/account" onClick={closeMenu}>
+                      <User className="w-4 h-4" />
+                      Llogaria ime
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" className="justify-start" asChild>
+                      <Link to="/auth?role=buyer" onClick={closeMenu}>Hyr</Link>
+                    </Button>
+                    <Button variant="hero" size="sm" asChild>
+                      <Link to="/auth?mode=signup&role=buyer" onClick={closeMenu}>Regjistrohu</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>
