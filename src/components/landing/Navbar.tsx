@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Store, ArrowLeftRight } from "lucide-react";
+import { Store, ArrowLeftRight, Menu, X } from "lucide-react";
 
 interface NavbarProps {
   view?: "buyer" | "business";
@@ -9,6 +10,9 @@ interface NavbarProps {
 
 const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
   const isBusiness = view === "business";
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMenu = () => setMobileOpen(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
@@ -22,7 +26,7 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
             <span className="text-xl font-bold text-foreground">eblej.com</span>
           </div>
 
-          {/* Navigation Links - change based on view */}
+          {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             {isBusiness ? (
               <>
@@ -48,27 +52,20 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
             )}
           </div>
 
-          {/* Right side: view toggle + CTA */}
-          <div className="flex items-center gap-3">
-            {/* View toggle */}
+          {/* Desktop right side */}
+          <div className="hidden md:flex items-center gap-3">
             {onViewChange && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 text-xs sm:text-sm"
+                className="gap-2 text-sm"
                 onClick={() => onViewChange(isBusiness ? "buyer" : "business")}
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">
-                  {isBusiness ? "Për blerës" : "Për biznese"}
-                </span>
-                <span className="sm:hidden">
-                  {isBusiness ? "Blerës" : "Biznese"}
-                </span>
+                {isBusiness ? "Për blerës" : "Për biznese"}
               </Button>
             )}
-
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+            <Button variant="ghost" size="sm" asChild>
               <Link to="/auth">Hyr</Link>
             </Button>
             <Button variant="hero" size="sm" asChild>
@@ -77,8 +74,67 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
               </Link>
             </Button>
           </div>
+
+          {/* Mobile: toggle + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            {onViewChange && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => onViewChange(isBusiness ? "buyer" : "business")}
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                {isBusiness ? "Blerës" : "Biznese"}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg animate-fade-up">
+          <div className="container mx-auto px-4 py-4 space-y-1">
+            {isBusiness ? (
+              <>
+                <Link to="/#si-funksionon" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
+                  Si funksionon
+                </Link>
+                <Link to="/#benefitet" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
+                  Benefitet
+                </Link>
+                <Link to="/#cmimet" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
+                  Çmimet
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/marketplace" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
+                  Dyqanet
+                </Link>
+                <Link to="/marketplace?sort=trending" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
+                  Trending
+                </Link>
+              </>
+            )}
+
+            <div className="pt-3 mt-3 border-t border-border/50 flex flex-col gap-2">
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
+                <Link to="/auth" onClick={closeMenu}>Hyr</Link>
+              </Button>
+              <Button variant="hero" size="sm" asChild>
+                <Link to="/auth?mode=signup" onClick={closeMenu}>
+                  {isBusiness ? "Regjistro biznesin" : "Fillo falas"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
