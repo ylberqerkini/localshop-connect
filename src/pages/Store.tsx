@@ -25,6 +25,7 @@ interface Product {
   image_url: string | null;
   stock_quantity: number | null;
   category_id: string | null;
+  badge: string | null;
 }
 
 interface Category {
@@ -63,7 +64,7 @@ function StoreContent() {
       setBusiness(biz as Business);
 
       const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('id, name, price, description, image_url, stock_quantity, category_id').eq('business_id', biz.id).eq('is_active', true).order('created_at', { ascending: false }),
+        supabase.from('products').select('id, name, price, description, image_url, stock_quantity, category_id, badge').eq('business_id', biz.id).eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('categories').select('id, name').eq('business_id', biz.id).order('name'),
       ]);
 
@@ -164,7 +165,7 @@ function StoreContent() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map(product => (
-              <ProductCard key={product.id} {...product} subdomain={subdomain} />
+              <ProductCard key={product.id} {...product} subdomain={subdomain} badge={product.badge} />
             ))}
           </div>
         )}

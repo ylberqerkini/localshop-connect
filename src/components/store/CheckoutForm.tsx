@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { CouponInput } from './CouponInput';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -22,6 +23,13 @@ const checkoutSchema = z.object({
 
 type CheckoutValues = z.infer<typeof checkoutSchema>;
 
+interface CouponResult {
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  free_delivery: boolean;
+}
+
 interface CheckoutFormProps {
   open: boolean;
   onClose: () => void;
@@ -34,18 +42,31 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
   const { subdomain } = useParams<{ subdomain: string }>();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponResult | null>(null);
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: { full_name: '', phone: '', address: '', city: '', notes: '' },
   });
 
+  // Calculate discount
+  let discountAmount = 0;
+  let effectiveDelivery = deliveryFee;
+  if (appliedCoupon) {
+    if (appliedCoupon.discount_type === 'fixed') {
+      discountAmount = Math.min(appliedCoupon.discount_value, subtotal);
+    } else {
+      discountAmount = subtotal * (appliedCoupon.discount_value / 100);
+    }
+    if (appliedCoupon.free_delivery) effectiveDelivery = 0;
+  }
+  const total = subtotal - discountAmount + effectiveDelivery;
+
   const onSubmit = async (values: CheckoutValues) => {
     if (items.length === 0) return;
     setSubmitting(true);
 
     try {
-      // Create customer
       const { data: customer, error: custErr } = await supabase
         .from('customers')
         .insert({ business_id: businessId, full_name: values.full_name, phone: values.phone, address: values.address, email: null })
@@ -54,10 +75,8 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       if (custErr) throw custErr;
 
       const platformFee = 1.00;
-      const total = subtotal + deliveryFee;
       const orderNum = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
-      // Create order
       const { data: order, error: ordErr } = await supabase
         .from('orders')
         .insert({
@@ -65,18 +84,19 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
           customer_id: customer.id,
           order_number: orderNum,
           subtotal,
-          delivery_fee: deliveryFee,
+          delivery_fee: effectiveDelivery,
           platform_fee: platformFee,
           total,
           city: values.city,
           notes: values.notes || null,
           status: 'pending',
-        })
+          coupon_code: appliedCoupon?.code || null,
+          discount_amount: discountAmount,
+        } as any)
         .select('id')
         .single();
       if (ordErr) throw ordErr;
 
-      // Create order items
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.id,
@@ -89,7 +109,6 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
       if (itemsErr) throw itemsErr;
 
-      // Log commission
       await supabase.from('commission_logs').insert({
         order_id: order.id,
         business_id: businessId,
@@ -98,7 +117,21 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
         commission_amount: platformFee,
       });
 
-      // Send notification (fire and forget)
+      // Increment coupon used_count
+      if (appliedCoupon) {
+        try {
+          const { data: couponData } = await supabase
+            .from('coupons')
+            .select('id, used_count')
+            .eq('business_id', businessId)
+            .eq('code', appliedCoupon.code)
+            .maybeSingle();
+          if (couponData) {
+            await supabase.from('coupons').update({ used_count: (couponData.used_count || 0) + 1 }).eq('id', couponData.id);
+          }
+        } catch (e) { console.error('Coupon update error:', e); }
+      }
+
       supabase.functions.invoke('notify-order', {
         body: {
           business_id: businessId,
@@ -107,7 +140,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
           customer_phone: values.phone,
           city: values.city,
           subtotal,
-          delivery_fee: deliveryFee,
+          delivery_fee: effectiveDelivery,
           total,
           items: items.map(i => ({ product_name: i.name, quantity: i.quantity, unit_price: i.price, total: i.price * i.quantity })),
           notes: values.notes || undefined,
@@ -115,6 +148,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       }).catch(err => console.error('Notification error:', err));
 
       clearCart();
+      setAppliedCoupon(null);
       onClose();
       navigate(`/store/${subdomain}/order/${orderNum}`);
     } catch (err) {
@@ -126,6 +160,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
 
   const handleClose = () => {
     form.reset();
+    setAppliedCoupon(null);
     onClose();
   };
 
@@ -135,58 +170,70 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
         <DialogHeader>
           <DialogTitle>Përfundo porosinë</DialogTitle>
         </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField control={form.control} name="full_name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emri i plotë</FormLabel>
-                    <FormControl><Input placeholder="Emri Mbiemri" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="phone" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefoni</FormLabel>
-                    <FormControl><Input placeholder="+355 6X XXX XXXX" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField control={form.control} name="city" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Qyteti</FormLabel>
-                      <FormControl><Input placeholder="Tiranë" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="address" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Adresa</FormLabel>
-                      <FormControl><Input placeholder="Rruga, Nr." {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="notes" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shënime (opsionale)</FormLabel>
-                    <FormControl><Textarea placeholder="Shënime për porosinë..." rows={2} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField control={form.control} name="full_name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Emri i plotë</FormLabel>
+                <FormControl><Input placeholder="Emri Mbiemri" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefoni</FormLabel>
+                <FormControl><Input placeholder="+355 6X XXX XXXX" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="city" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Qyteti</FormLabel>
+                  <FormControl><Input placeholder="Tiranë" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="address" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adresa</FormLabel>
+                  <FormControl><Input placeholder="Rruga, Nr." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Shënime (opsionale)</FormLabel>
+                <FormControl><Textarea placeholder="Shënime për porosinë..." rows={2} {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-                <div className="border-t border-border pt-3 space-y-1 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>{subtotal.toLocaleString()} ALL</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>{deliveryFee.toLocaleString()} ALL</span></div>
-                  <div className="flex justify-between font-bold text-base"><span>Totali</span><span>{(subtotal + deliveryFee).toLocaleString()} ALL</span></div>
-                </div>
+            {/* Coupon */}
+            <CouponInput
+              businessId={businessId}
+              subtotal={subtotal}
+              applied={appliedCoupon}
+              onApply={setAppliedCoupon}
+              onRemove={() => setAppliedCoupon(null)}
+            />
 
-                <Button type="submit" className="w-full" size="lg" disabled={submitting || items.length === 0}>
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Dërgo porosinë
-                </Button>
-              </form>
-            </Form>
+            <div className="border-t border-border pt-3 space-y-1 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>{subtotal.toLocaleString()} ALL</span></div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-success"><span>Zbritja</span><span>-{discountAmount.toLocaleString()} ALL</span></div>
+              )}
+              <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>{effectiveDelivery.toLocaleString()} ALL</span></div>
+              <div className="flex justify-between font-bold text-base"><span>Totali</span><span>{total.toLocaleString()} ALL</span></div>
+            </div>
+
+            <Button type="submit" className="w-full" size="lg" disabled={submitting || items.length === 0}>
+              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Dërgo porosinë
+            </Button>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -18,6 +18,8 @@ import Products from "./pages/dashboard/Products";
 import Customers from "./pages/dashboard/Customers";
 import Analytics from "./pages/dashboard/Analytics";
 import Earnings from "./pages/dashboard/Earnings";
+import Coupons from "./pages/dashboard/Coupons";
+import Reviews from "./pages/dashboard/Reviews";
 import Settings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
@@ -25,68 +27,36 @@ import StorePage from "./pages/Store";
 import ProductDetail from "./pages/ProductDetail";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Marketplace from "./pages/Marketplace";
-import PlatformFees from "./pages/admin/PlatformFees";
+import SellerProfile from "./pages/SellerProfile";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
-// Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
-// Admin route wrapper
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
-
-  if (authLoading || adminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user || !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
+  if (authLoading || adminLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  if (!user || !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
-// Dashboard wrapper that checks for business
 function DashboardRoute({ children }: { children: React.ReactNode }) {
   const { business, loading } = useBusiness();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // If no business exists, redirect to create business page
-  if (!business) {
-    return <CreateBusiness />;
-  }
-
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  if (!business) return <CreateBusiness />;
   return <DashboardLayout>{children}</DashboardLayout>;
 }
+
+const DashboardWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute><DashboardRoute>{children}</DashboardRoute></ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -97,109 +67,32 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Public routes */}
+              {/* Public */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/seller/:subdomain" element={<SellerProfile />} />
 
-              {/* Dashboard routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Overview />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/orders"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Orders />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/products"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Products />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/categories"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Categories />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/customers"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Customers />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/analytics"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Analytics />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/earnings"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Earnings />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/settings"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoute>
-                      <Settings />
-                    </DashboardRoute>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Dashboard */}
+              <Route path="/dashboard" element={<DashboardWrapper><Overview /></DashboardWrapper>} />
+              <Route path="/dashboard/orders" element={<DashboardWrapper><Orders /></DashboardWrapper>} />
+              <Route path="/dashboard/products" element={<DashboardWrapper><Products /></DashboardWrapper>} />
+              <Route path="/dashboard/categories" element={<DashboardWrapper><Categories /></DashboardWrapper>} />
+              <Route path="/dashboard/customers" element={<DashboardWrapper><Customers /></DashboardWrapper>} />
+              <Route path="/dashboard/analytics" element={<DashboardWrapper><Analytics /></DashboardWrapper>} />
+              <Route path="/dashboard/earnings" element={<DashboardWrapper><Earnings /></DashboardWrapper>} />
+              <Route path="/dashboard/coupons" element={<DashboardWrapper><Coupons /></DashboardWrapper>} />
+              <Route path="/dashboard/reviews" element={<DashboardWrapper><Reviews /></DashboardWrapper>} />
+              <Route path="/dashboard/settings" element={<DashboardWrapper><Settings /></DashboardWrapper>} />
 
-              {/* Admin routes */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <PlatformFees />
-                  </AdminRoute>
-                }
-              />
+              {/* Admin */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-              {/* Public store */}
+              {/* Store */}
               <Route path="/store/:subdomain" element={<StorePage />} />
               <Route path="/store/:subdomain/product/:productId" element={<StorePage />} />
               <Route path="/store/:subdomain/order/:orderNumber" element={<OrderConfirmation />} />
 
-              {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
