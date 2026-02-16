@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBusiness } from '@/hooks/useBusiness';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, Edit, Trash2, Package, Loader2, Upload, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, Loader2, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
 import { ShareProduct } from '@/components/dashboard/ShareProduct';
@@ -23,6 +24,7 @@ interface Product {
   stock_quantity: number;
   is_active: boolean;
   category_id: string | null;
+  badge: string | null;
 }
 
 interface Category {
@@ -52,7 +54,8 @@ export default function Products() {
     image_url: '',
     stock_quantity: '0',
     is_active: true,
-    category_id: ''
+    category_id: '',
+    badge: ''
   });
 
   useEffect(() => {
@@ -106,7 +109,8 @@ export default function Products() {
         image_url: product.image_url || '',
         stock_quantity: String(product.stock_quantity),
         is_active: product.is_active,
-        category_id: product.category_id || ''
+        category_id: product.category_id || '',
+        badge: product.badge || ''
       });
       setImagePreview(product.image_url || null);
     } else {
@@ -118,7 +122,8 @@ export default function Products() {
         image_url: '',
         stock_quantity: '0',
         is_active: true,
-        category_id: ''
+        category_id: '',
+        badge: ''
       });
       setImagePreview(null);
     }
@@ -190,7 +195,8 @@ export default function Products() {
         image_url: formData.image_url || null,
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         is_active: formData.is_active,
-        category_id: formData.category_id || null
+        category_id: formData.category_id || null,
+        badge: formData.badge || null,
       };
 
       if (editingProduct) {
@@ -320,22 +326,30 @@ export default function Products() {
           {filteredProducts.map((product) => (
             <Card key={product.id} className="border-0 shadow-soft overflow-hidden">
               <div className="aspect-square bg-muted relative">
-                {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="h-16 w-16 text-muted-foreground/50" />
-                  </div>
-                )}
-                {!product.is_active && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                    <Badge variant="secondary">Joaktiv</Badge>
-                  </div>
-                )}
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="h-16 w-16 text-muted-foreground/50" />
+                    </div>
+                  )}
+                  {!product.is_active && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                      <Badge variant="secondary">Joaktiv</Badge>
+                    </div>
+                  )}
+                  {product.badge && (
+                    <Badge className="absolute top-2 left-2 text-xs capitalize">{product.badge === 'new' ? 'I ri' : product.badge === 'bestseller' ? 'Bestseller' : 'I limituar'}</Badge>
+                  )}
+                  {product.stock_quantity <= 5 && product.stock_quantity > 0 && product.is_active && (
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-destructive/90 text-destructive-foreground rounded-full text-xs">
+                      <AlertTriangle className="h-3 w-3" /> Stok i ulët
+                    </div>
+                  )}
               </div>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -488,6 +502,19 @@ export default function Products() {
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Badge (opsionale)</Label>
+              <Select value={formData.badge} onValueChange={v => setFormData({ ...formData, badge: v === 'none' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="Pa badge" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Pa badge</SelectItem>
+                  <SelectItem value="new">I ri</SelectItem>
+                  <SelectItem value="bestseller">Bestseller</SelectItem>
+                  <SelectItem value="limited">I limituar</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
