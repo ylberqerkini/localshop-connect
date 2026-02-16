@@ -20,15 +20,15 @@ const Navbar = () => {
             <Link to="/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
               Dyqanet
             </Link>
-            <a href="#si-funksionon" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/#si-funksionon" className="text-muted-foreground hover:text-foreground transition-colors">
               Si funksionon
-            </a>
-            <a href="#benefitet" className="text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/#benefitet" className="text-muted-foreground hover:text-foreground transition-colors">
               Benefitet
-            </a>
-            <a href="#cmimet" className="text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/#cmimet" className="text-muted-foreground hover:text-foreground transition-colors">
               Çmimet
-            </a>
+            </Link>
           </div>
 
           {/* CTA Buttons */}
