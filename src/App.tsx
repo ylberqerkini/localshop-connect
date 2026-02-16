@@ -12,6 +12,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import BuyerAccount from "./pages/BuyerAccount";
 import Overview from "./pages/dashboard/Overview";
 import Orders from "./pages/dashboard/Orders";
 import Products from "./pages/dashboard/Products";
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/seller/:subdomain" element={<SellerProfile />} />
+              <Route path="/account" element={<ProtectedRoute><BuyerAccount /></ProtectedRoute>} />
 
               {/* Dashboard */}
               <Route path="/dashboard" element={<DashboardWrapper><Overview /></DashboardWrapper>} />
