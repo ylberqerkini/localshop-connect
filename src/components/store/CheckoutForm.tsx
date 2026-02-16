@@ -220,12 +220,12 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
             />
 
             <div className="border-t border-border pt-3 space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>{subtotal.toLocaleString()} ALL</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>€{subtotal.toFixed(2)}</span></div>
               {discountAmount > 0 && (
-                <div className="flex justify-between text-success"><span>Zbritja</span><span>-{discountAmount.toLocaleString()} ALL</span></div>
+                <div className="flex justify-between text-success"><span>Zbritja</span><span>-€{discountAmount.toFixed(2)}</span></div>
               )}
-              <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>{effectiveDelivery.toLocaleString()} ALL</span></div>
-              <div className="flex justify-between font-bold text-base"><span>Totali</span><span>{total.toLocaleString()} ALL</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>€{effectiveDelivery.toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold text-base"><span>Totali</span><span>€{total.toFixed(2)}</span></div>
             </div>
 
             <Button type="submit" className="w-full" size="lg" disabled={submitting || items.length === 0}>
