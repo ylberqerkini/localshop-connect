@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Store, ShoppingCart, Loader2 } from 'lucide-react';
+import { DollarSign, Store, ShoppingCart, Loader2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { sq } from 'date-fns/locale';
 
@@ -18,6 +21,8 @@ export default function PlatformFees() {
   const [data, setData] = useState<BusinessFees[]>([]);
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ orders: 0, fees: 0, revenue: 0 });
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -83,9 +88,19 @@ export default function PlatformFees() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="container mx-auto flex items-center h-16 px-4">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
+        <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <h1 className="text-xl font-bold text-foreground">Admin — Tarifa Platformës</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/dashboard')}>
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-2" onClick={() => signOut()}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Dil</span>
+            </Button>
+          </div>
         </div>
       </header>
 

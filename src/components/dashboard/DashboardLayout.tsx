@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useBusiness } from '@/hooks/useBusiness';
 import {
   LayoutDashboard,
@@ -16,7 +17,8 @@ import {
   Menu,
   X,
   Store,
-  ExternalLink
+  ExternalLink,
+  Shield
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -37,6 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const { business } = useBusiness();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -119,6 +122,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Link>
               );
             })}
+
+            {isAdmin && (
+              <>
+                <div className="border-t border-border my-3" />
+                <Link
+                  to="/admin"
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    location.pathname === '/admin'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <Shield className="h-5 w-5" />
+                  Admin Panel
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Sign out */}
