@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { BusinessProvider, useBusiness } from "@/hooks/useBusiness";
+import { useAdmin } from "@/hooks/useAdmin";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 // Pages
@@ -21,6 +22,7 @@ import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
 import StorePage from "./pages/Store";
 import Marketplace from "./pages/Marketplace";
+import PlatformFees from "./pages/admin/PlatformFees";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Admin route wrapper
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -146,6 +168,16 @@ const App = () => (
                       <Settings />
                     </DashboardRoute>
                   </ProtectedRoute>
+                }
+              />
+
+              {/* Admin routes */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <PlatformFees />
+                  </AdminRoute>
                 }
               />
 
