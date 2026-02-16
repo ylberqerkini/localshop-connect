@@ -41,14 +41,7 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
                 </Link>
               </>
             ) : (
-              <>
-                <Link to="/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Dyqanet
-                </Link>
-                <Link to="/marketplace?sort=trending" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Trending
-                </Link>
-              </>
+              <></>
             )}
           </div>
 
@@ -65,14 +58,16 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
                 {isBusiness ? "Për blerës" : "Për biznese"}
               </Button>
             )}
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/auth">Hyr</Link>
-            </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/auth?mode=signup">
-                {isBusiness ? "Regjistro biznesin" : "Fillo falas"}
-              </Link>
-            </Button>
+            {isBusiness && (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth">Hyr</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth?mode=signup">Regjistro biznesin</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile: toggle + hamburger */}
@@ -112,26 +107,19 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
                 </Link>
               </>
             ) : (
-              <>
-                <Link to="/marketplace" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
-                  Dyqanet
-                </Link>
-                <Link to="/marketplace?sort=trending" onClick={closeMenu} className="block px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors">
-                  Trending
-                </Link>
-              </>
+              <></>
             )}
 
-            <div className="pt-3 mt-3 border-t border-border/50 flex flex-col gap-2">
-              <Button variant="ghost" size="sm" className="justify-start" asChild>
-                <Link to="/auth" onClick={closeMenu}>Hyr</Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/auth?mode=signup" onClick={closeMenu}>
-                  {isBusiness ? "Regjistro biznesin" : "Fillo falas"}
-                </Link>
-              </Button>
-            </div>
+            {isBusiness && (
+              <div className="pt-3 mt-3 border-t border-border/50 flex flex-col gap-2">
+                <Button variant="ghost" size="sm" className="justify-start" asChild>
+                  <Link to="/auth" onClick={closeMenu}>Hyr</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth?mode=signup" onClick={closeMenu}>Regjistro biznesin</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
