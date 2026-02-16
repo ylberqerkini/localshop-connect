@@ -24,6 +24,7 @@ export type Database = {
           description: string | null
           email: string | null
           email_notifications: boolean
+          iban: string | null
           id: string
           is_active: boolean | null
           is_featured: boolean | null
@@ -43,6 +44,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           email_notifications?: boolean
+          iban?: string | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
@@ -62,6 +64,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           email_notifications?: boolean
+          iban?: string | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
@@ -99,6 +102,51 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_logs: {
+        Row: {
+          business_id: string
+          commission_amount: number
+          created_at: string
+          id: string
+          order_id: string
+          order_number: string
+          order_total: number
+        }
+        Insert: {
+          business_id: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          order_id: string
+          order_number: string
+          order_total: number
+        }
+        Update: {
+          business_id?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          order_number?: string
+          order_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_logs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -248,6 +296,53 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount: number
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          net_amount: number
+          period_end: string
+          period_start: string
+          platform_fees: number
+          status: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          net_amount: number
+          period_end: string
+          period_start: string
+          platform_fees?: number
+          status?: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          net_amount?: number
+          period_end?: string
+          period_start?: string
+          platform_fees?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]

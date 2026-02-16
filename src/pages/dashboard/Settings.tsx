@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell, Star, Tag } from 'lucide-react';
+import { Loader2, Store, Truck, CreditCard, ExternalLink, Bell, Star, Tag, Landmark } from 'lucide-react';
 
 const BUSINESS_CATEGORIES = [
   { value: 'restaurant', label: 'Restorant' },
@@ -37,7 +37,8 @@ export default function Settings() {
     email_notifications: true,
     is_featured: false,
     business_category: 'other',
-    logo_url: ''
+    logo_url: '',
+    iban: ''
   });
 
   useEffect(() => {
@@ -53,7 +54,8 @@ export default function Settings() {
         email_notifications: (business as any).email_notifications ?? true,
         is_featured: (business as any).is_featured ?? false,
         business_category: (business as any).business_category || 'other',
-        logo_url: business.logo_url || ''
+        logo_url: business.logo_url || '',
+        iban: (business as any).iban || ''
       });
     }
   }, [business]);
@@ -73,6 +75,7 @@ export default function Settings() {
         email_notifications: formData.email_notifications,
         is_featured: formData.is_featured,
         business_category: formData.business_category,
+        iban: formData.iban || null,
       } as any);
 
       if (error) throw error;
@@ -334,6 +337,30 @@ export default function Settings() {
             <Switch
               checked={formData.is_featured}
               onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bank / IBAN */}
+      <Card className="border-0 shadow-soft">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Landmark className="h-5 w-5 text-primary" />
+            <CardTitle>Llogarija bankare</CardTitle>
+          </div>
+          <CardDescription>
+            IBAN-i ku do të merren pagesat javore
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="iban">IBAN</Label>
+            <Input
+              id="iban"
+              value={formData.iban}
+              onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
+              placeholder="XK05 1234 5678 9012 3456"
             />
           </div>
         </CardContent>

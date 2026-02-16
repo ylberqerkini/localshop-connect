@@ -17,6 +17,7 @@ import Orders from "./pages/dashboard/Orders";
 import Products from "./pages/dashboard/Products";
 import Customers from "./pages/dashboard/Customers";
 import Analytics from "./pages/dashboard/Analytics";
+import Earnings from "./pages/dashboard/Earnings";
 import Settings from "./pages/dashboard/Settings";
 import Categories from "./pages/dashboard/Categories";
 import CreateBusiness from "./pages/dashboard/CreateBusiness";
@@ -158,6 +159,16 @@ const App = () => (
                   <ProtectedRoute>
                     <DashboardRoute>
                       <Analytics />
+                    </DashboardRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/earnings"
+                element={
+                  <ProtectedRoute>
+                    <DashboardRoute>
+                      <Earnings />
                     </DashboardRoute>
                   </ProtectedRoute>
                 }

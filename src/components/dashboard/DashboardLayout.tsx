@@ -18,7 +18,8 @@ import {
   X,
   Store,
   ExternalLink,
-  Shield
+  Shield,
+  Wallet
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -31,6 +32,7 @@ const navItems = [
   { path: '/dashboard/products', label: 'Produktet', icon: Package },
   { path: '/dashboard/categories', label: 'Kategoritë', icon: Tag },
   { path: '/dashboard/customers', label: 'Klientët', icon: Users },
+  { path: '/dashboard/earnings', label: 'Fitimet', icon: Wallet },
   { path: '/dashboard/analytics', label: 'Analitika', icon: BarChart3 },
   { path: '/dashboard/settings', label: 'Cilësimet', icon: Settings },
 ];
