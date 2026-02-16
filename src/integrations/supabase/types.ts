@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
       businesses: {
         Row: {
           address: string | null
@@ -28,6 +52,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_featured: boolean | null
+          is_suspended: boolean | null
           logo_url: string | null
           name: string
           owner_id: string
@@ -48,6 +73,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          is_suspended?: boolean | null
           logo_url?: string | null
           name: string
           owner_id: string
@@ -68,6 +94,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          is_suspended?: boolean | null
           logo_url?: string | null
           name?: string
           owner_id?: string
@@ -151,6 +178,59 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          free_delivery: boolean
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number | null
+          used_count: number
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          free_delivery?: boolean
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          used_count?: number
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          free_delivery?: boolean
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -182,6 +262,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followers: {
+        Row: {
+          business_id: string
+          created_at: string
+          follower_identifier: string
+          id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          follower_identifier: string
+          id?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          follower_identifier?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
@@ -241,9 +350,11 @@ export type Database = {
         Row: {
           business_id: string
           city: string | null
+          coupon_code: string | null
           created_at: string
           customer_id: string | null
           delivery_fee: number | null
+          discount_amount: number | null
           id: string
           notes: string | null
           order_number: string
@@ -256,9 +367,11 @@ export type Database = {
         Insert: {
           business_id: string
           city?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_id?: string | null
           delivery_fee?: number | null
+          discount_amount?: number | null
           id?: string
           notes?: string | null
           order_number: string
@@ -271,9 +384,11 @@ export type Database = {
         Update: {
           business_id?: string
           city?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_id?: string | null
           delivery_fee?: number | null
+          discount_amount?: number | null
           id?: string
           notes?: string | null
           order_number?: string
@@ -347,8 +462,41 @@ export type Database = {
           },
         ]
       }
+      product_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          product_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          product_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          product_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
+          badge: string | null
           business_id: string
           category_id: string | null
           created_at: string
@@ -362,6 +510,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge?: string | null
           business_id: string
           category_id?: string | null
           created_at?: string
@@ -375,6 +524,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge?: string | null
           business_id?: string
           category_id?: string | null
           created_at?: string
@@ -404,6 +554,57 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          business_id: string
+          comment: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          is_approved: boolean
+          product_id: string
+          rating: number
+        }
+        Insert: {
+          business_id: string
+          comment?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          is_approved?: boolean
+          product_id: string
+          rating: number
+        }
+        Update: {
+          business_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          is_approved?: boolean
+          product_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -424,6 +625,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_identifier: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_identifier: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
