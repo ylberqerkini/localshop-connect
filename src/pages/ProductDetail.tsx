@@ -175,7 +175,7 @@ export default function ProductDetail() {
               </div>
               <WishlistButton productId={product.id} />
             </div>
-            <p className="text-3xl font-bold text-primary">{product.price.toLocaleString()} ALL</p>
+            <p className="text-3xl font-bold text-primary">€{product.price.toFixed(2)}</p>
 
             {product.description && <p className="text-muted-foreground leading-relaxed">{product.description}</p>}
 
@@ -206,7 +206,7 @@ export default function ProductDetail() {
             {/* WhatsApp share */}
             <Button variant="outline" className="gap-2 mt-2" onClick={() => {
               const url = window.location.href;
-              const text = `${product.name} — ${product.price.toLocaleString()} ALL\n${url}`;
+              const text = `${product.name} — €${product.price.toFixed(2)}\n${url}`;
               window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
             }}>
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -240,7 +240,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm text-foreground line-clamp-1">{rp.name}</h3>
-                    <p className="text-sm font-bold text-primary mt-1">{rp.price.toLocaleString()} ALL</p>
+                    <p className="text-sm font-bold text-primary mt-1">€{rp.price.toFixed(2)}</p>
                   </div>
                 </Link>
               ))}

@@ -51,7 +51,7 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
         {description && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
         <div className="flex items-center justify-between pt-1">
           <div>
-            <span className="text-lg font-bold text-foreground">{price.toLocaleString()} ALL</span>
+            <span className="text-lg font-bold text-foreground">€{price.toFixed(2)}</span>
             {lowStock && <p className="text-xs text-destructive">Vetëm {stock_quantity} copë!</p>}
           </div>
           <Button

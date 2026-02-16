@@ -51,7 +51,7 @@ export function CartDrawer({ deliveryFee, onCheckout }: CartDrawerProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-foreground line-clamp-1">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">{item.price.toLocaleString()} ALL</p>
+                    <p className="text-sm text-muted-foreground">€{item.price.toFixed(2)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
                         <Minus className="h-3 w-3" />
@@ -63,7 +63,7 @@ export function CartDrawer({ deliveryFee, onCheckout }: CartDrawerProps) {
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
-                    <p className="font-semibold text-sm">{(item.price * item.quantity).toLocaleString()} ALL</p>
+                    <p className="font-semibold text-sm">€{(item.price * item.quantity).toFixed(2)}</p>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeItem(item.id)}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -74,9 +74,9 @@ export function CartDrawer({ deliveryFee, onCheckout }: CartDrawerProps) {
 
             <SheetFooter className="border-t border-border pt-4 flex-col gap-2">
               <div className="w-full space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>{subtotal.toLocaleString()} ALL</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>{deliveryFee.toLocaleString()} ALL</span></div>
-                <div className="flex justify-between font-bold text-base pt-1 border-t border-border"><span>Totali</span><span>{total.toLocaleString()} ALL</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Nëntotali</span><span>€{subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Transporti</span><span>€{deliveryFee.toFixed(2)}</span></div>
+                <div className="flex justify-between font-bold text-base pt-1 border-t border-border"><span>Totali</span><span>€{total.toFixed(2)}</span></div>
               </div>
               <Button className="w-full" size="lg" onClick={onCheckout}>
                 Porosit tani
