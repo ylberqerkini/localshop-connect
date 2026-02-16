@@ -1,27 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  ArrowRight, ShoppingBag, Star, TrendingUp, Search,
-  UtensilsCrossed, Shirt, Smartphone, ShoppingBasket,
-  Pill, Sparkles, Wrench, MoreHorizontal,
-} from "lucide-react";
-
-const categories = [
-  { key: "restaurant", label: "Restorante", icon: UtensilsCrossed },
-  { key: "clothing", label: "Veshje", icon: Shirt },
-  { key: "electronics", label: "Elektronikë", icon: Smartphone },
-  { key: "market", label: "Market", icon: ShoppingBasket },
-  { key: "pharmacy", label: "Farmaci", icon: Pill },
-  { key: "beauty", label: "Bukuri", icon: Sparkles },
-  { key: "services", label: "Shërbime", icon: Wrench },
-  { key: "other", label: "Të tjera", icon: MoreHorizontal },
-];
+import { ArrowRight, ShoppingBag, Star, TrendingUp, Search } from "lucide-react";
+import { usePlatformCategories, buildCategoryTree } from "@/hooks/usePlatformCategories";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 
 const BuyerHero = () => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const { data: categories = [] } = usePlatformCategories();
+  const { roots } = buildCategoryTree(categories);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,24 +26,20 @@ const BuyerHero = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <ShoppingBag className="w-4 h-4" />
             Zbulo dyqanet lokale online
           </div>
 
-          {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground leading-tight mb-4">
             Bli online nga{" "}
             <span className="text-gradient-primary">bizneset lokale</span>
           </h1>
 
-          {/* Subheadline */}
           <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">
             Gjej restorante, dyqane veshjesh, elektronikë dhe më shumë.
           </p>
 
-          {/* Search box */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -67,23 +52,33 @@ const BuyerHero = () => {
             </div>
           </form>
 
-          {/* Category icons */}
+          {/* Category icons from DB */}
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3 max-w-4xl mx-auto mb-12">
-            {categories.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => navigate(`/marketplace?category=${key}`)}
-                className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/40 hover:shadow-soft transition-all group"
-              >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">
-                  {label}
-                </span>
-              </button>
-            ))}
+            {roots.slice(0, 8).map((cat) => {
+              const Icon = getCategoryIcon(cat.icon);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => navigate(`/marketplace?category=${cat.slug}`)}
+                  className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/40 hover:shadow-soft transition-all group"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* More categories link */}
+          {roots.length > 8 && (
+            <Button variant="link" className="text-primary mb-8" onClick={() => navigate('/marketplace')}>
+              Shiko të gjitha kategoritë <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
 
           {/* Stats */}
           <div className="pt-8 border-t border-border/50">

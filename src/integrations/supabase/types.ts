@@ -462,6 +462,83 @@ export type Database = {
           },
         ]
       }
+      platform_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "platform_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "platform_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           created_at: string
@@ -507,6 +584,7 @@ export type Database = {
           name: string
           price: number
           stock_quantity: number | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
@@ -521,6 +599,7 @@ export type Database = {
           name: string
           price: number
           stock_quantity?: number | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -535,6 +614,7 @@ export type Database = {
           name?: string
           price?: number
           stock_quantity?: number | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [

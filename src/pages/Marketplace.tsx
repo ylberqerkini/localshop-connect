@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { usePlatformCategories, buildCategoryTree, type PlatformCategory } from '@/hooks/usePlatformCategories';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight, UtensilsCrossed, Shirt, Cpu, ShoppingCart, Pill, Sparkles, Wrench, MoreHorizontal, TrendingUp, Clock } from 'lucide-react';
+import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight, TrendingUp, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 
 interface BusinessWithProducts {
   id: string;
@@ -16,22 +18,11 @@ interface BusinessWithProducts {
   subdomain: string;
   address: string | null;
   is_featured: boolean;
-  business_category: string;
   product_count: number;
   order_count: number;
   created_at: string;
+  category_slugs: string[];
 }
-
-const CATEGORIES: Record<string, { label: string; icon: React.ElementType }> = {
-  restaurant: { label: 'Restorante', icon: UtensilsCrossed },
-  clothing: { label: 'Veshje', icon: Shirt },
-  electronics: { label: 'Elektronikë', icon: Cpu },
-  market: { label: 'Market', icon: ShoppingCart },
-  pharmacy: { label: 'Farmaci', icon: Pill },
-  beauty: { label: 'Bukuri', icon: Sparkles },
-  services: { label: 'Shërbime', icon: Wrench },
-  other: { label: 'Të tjera', icon: MoreHorizontal },
-};
 
 function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; featured?: boolean }) {
   return (
@@ -73,36 +64,53 @@ function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; fe
 }
 
 export default function Marketplace() {
+  const [searchParams] = useSearchParams();
+  const { data: platformCategories = [] } = usePlatformCategories();
   const [businesses, setBusinesses] = useState<BusinessWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [cityFilter, setCityFilter] = useState<string>('all');
+
+  const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
 
   useEffect(() => {
     async function load() {
-      const [bizRes, orderRes] = await Promise.all([
-        supabase.from('businesses').select('id, name, description, logo_url, subdomain, address, is_featured, business_category, created_at').eq('is_active', true).order('created_at', { ascending: false }),
+      const [bizRes, orderRes, pcRes] = await Promise.all([
+        supabase.from('businesses').select('id, name, description, logo_url, subdomain, address, is_featured, created_at').eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('orders').select('business_id'),
+        supabase.from('product_categories').select('product_id, category_id'),
       ]);
 
       const bizList = bizRes.data || [];
       const orders = orderRes.data || [];
+      const productCategories = pcRes.data || [];
 
-      // Count orders per business
       const orderCounts: Record<string, number> = {};
       orders.forEach(o => { orderCounts[o.business_id] = (orderCounts[o.business_id] || 0) + 1; });
 
+      // Get product counts & category slugs per business
       const enriched: BusinessWithProducts[] = await Promise.all(
         bizList.map(async (biz) => {
           const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('business_id', biz.id).eq('is_active', true);
+          
+          // Get products for this business to find their categories
+          const { data: bizProducts } = await supabase.from('products').select('id').eq('business_id', biz.id).eq('is_active', true);
+          const bizProductIds = (bizProducts || []).map(p => p.id);
+          const bizCatIds = productCategories
+            .filter(pc => bizProductIds.includes(pc.product_id))
+            .map(pc => pc.category_id);
+          const catSlugs = platformCategories
+            .filter(c => bizCatIds.includes(c.id))
+            .map(c => c.slug);
+
           return {
             ...biz,
             is_featured: !!biz.is_featured,
-            business_category: (biz as any).business_category || 'other',
             product_count: count ?? 0,
             order_count: orderCounts[biz.id] || 0,
             created_at: biz.created_at,
+            category_slugs: [...new Set(catSlugs)],
           };
         })
       );
@@ -111,35 +119,30 @@ export default function Marketplace() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [platformCategories]);
 
-  // Extract unique cities from addresses
   const cities = [...new Set(businesses.map(b => b.address?.split(',').pop()?.trim()).filter(Boolean))] as string[];
+
+  // Find selected category and all its subcategory slugs
+  const activeCategorySlugs = useMemo(() => {
+    if (!activeCategory) return null;
+    const cat = platformCategories.find(c => c.slug === activeCategory);
+    if (!cat) return null;
+    const subs = children(cat.id).map(c => c.slug);
+    return [cat.slug, ...subs];
+  }, [activeCategory, platformCategories, children]);
 
   const filtered = businesses.filter(b => {
     const matchesSearch = !search.trim() || b.name.toLowerCase().includes(search.toLowerCase()) || b.description?.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = !activeCategory || b.business_category === activeCategory;
+    const matchesCategory = !activeCategorySlugs || b.category_slugs.some(s => activeCategorySlugs.includes(s));
     const matchesCity = cityFilter === 'all' || b.address?.toLowerCase().includes(cityFilter.toLowerCase());
     return matchesSearch && matchesCategory && matchesCity;
   });
 
   const featuredBusinesses = filtered.filter(b => b.is_featured);
   const regularBusinesses = filtered.filter(b => !b.is_featured);
-
-  // Trending = most orders
   const trendingBusinesses = [...regularBusinesses].sort((a, b) => b.order_count - a.order_count).slice(0, 3);
-  // New arrivals = most recently created
   const newArrivals = [...regularBusinesses].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3);
-
-  const groupedByCategory = Object.entries(CATEGORIES).reduce<Record<string, BusinessWithProducts[]>>(
-    (acc, [key]) => {
-      const bizsInCat = regularBusinesses.filter(b => b.business_category === key);
-      if (bizsInCat.length > 0) acc[key] = bizsInCat;
-      return acc;
-    }, {}
-  );
-
-  const availableCategories = Object.keys(CATEGORIES).filter(key => businesses.some(b => b.business_category === key));
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,15 +177,14 @@ export default function Marketplace() {
               )}
             </div>
 
-            {availableCategories.length > 0 && (
+            {roots.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2">
                 <Button variant={activeCategory === null ? 'default' : 'outline'} size="sm" onClick={() => setActiveCategory(null)} className="rounded-full">Të gjitha</Button>
-                {availableCategories.map(key => {
-                  const cat = CATEGORIES[key];
-                  const Icon = cat.icon;
+                {roots.map(cat => {
+                  const Icon = getCategoryIcon(cat.icon);
                   return (
-                    <Button key={key} variant={activeCategory === key ? 'default' : 'outline'} size="sm" onClick={() => setActiveCategory(activeCategory === key ? null : key)} className="rounded-full gap-1.5">
-                      <Icon className="h-3.5 w-3.5" /> {cat.label}
+                    <Button key={cat.id} variant={activeCategory === cat.slug ? 'default' : 'outline'} size="sm" onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)} className="rounded-full gap-1.5">
+                      <Icon className="h-3.5 w-3.5" /> {cat.name}
                     </Button>
                   );
                 })}
@@ -199,7 +201,6 @@ export default function Marketplace() {
             </div>
           ) : (
             <>
-              {/* Featured */}
               {featuredBusinesses.length > 0 && (
                 <section className="mb-12">
                   <div className="flex items-center gap-2 mb-6"><Star className="h-5 w-5 text-primary fill-primary" /><h2 className="text-xl font-bold text-foreground">Dyqane të promovuara</h2></div>
@@ -209,7 +210,6 @@ export default function Marketplace() {
                 </section>
               )}
 
-              {/* Trending */}
               {!activeCategory && trendingBusinesses.length > 0 && (
                 <section className="mb-12">
                   <div className="flex items-center gap-2 mb-6"><TrendingUp className="h-5 w-5 text-accent" /><h2 className="text-xl font-bold text-foreground">Në trend</h2></div>
@@ -219,7 +219,6 @@ export default function Marketplace() {
                 </section>
               )}
 
-              {/* New Arrivals */}
               {!activeCategory && newArrivals.length > 0 && (
                 <section className="mb-12">
                   <div className="flex items-center gap-2 mb-6"><Clock className="h-5 w-5 text-success" /><h2 className="text-xl font-bold text-foreground">Të rinj në platformë</h2></div>
@@ -229,30 +228,18 @@ export default function Marketplace() {
                 </section>
               )}
 
-              {/* Categories */}
-              {activeCategory ? (
+              {regularBusinesses.length > 0 && (
                 <section>
                   <div className="flex items-center gap-2 mb-6">
-                    {(() => { const Icon = CATEGORIES[activeCategory]?.icon || Store; return <Icon className="h-5 w-5 text-primary" />; })()}
-                    <h2 className="text-xl font-bold text-foreground">{CATEGORIES[activeCategory]?.label || activeCategory}</h2>
+                    <Store className="h-5 w-5 text-primary" />
+                    <h2 className="text-xl font-bold text-foreground">
+                      {activeCategory ? platformCategories.find(c => c.slug === activeCategory)?.name || 'Dyqane' : 'Të gjitha dyqanet'}
+                    </h2>
                   </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {regularBusinesses.map(biz => <BusinessCard key={biz.id} biz={biz} />)}
                   </div>
                 </section>
-              ) : (
-                Object.entries(groupedByCategory).map(([catKey, bizList]) => {
-                  const cat = CATEGORIES[catKey];
-                  const Icon = cat?.icon || Store;
-                  return (
-                    <section key={catKey} className="mb-12">
-                      <div className="flex items-center gap-2 mb-6"><Icon className="h-5 w-5 text-primary" /><h2 className="text-xl font-bold text-foreground">{cat?.label || catKey}</h2></div>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {bizList.map(biz => <BusinessCard key={biz.id} biz={biz} />)}
-                      </div>
-                    </section>
-                  );
-                })
               )}
             </>
           )}

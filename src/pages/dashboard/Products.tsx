@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,8 @@ import { useBusiness } from '@/hooks/useBusiness';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Search, Edit, Trash2, Package, Loader2, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRef } from 'react';
 import { ShareProduct } from '@/components/dashboard/ShareProduct';
+import { CategorySelector } from '@/components/dashboard/CategorySelector';
 
 interface Product {
   id: string;
@@ -25,18 +25,14 @@ interface Product {
   is_active: boolean;
   category_id: string | null;
   badge: string | null;
-}
-
-interface Category {
-  id: string;
-  name: string;
+  tags: string[] | null;
 }
 
 export default function Products() {
   const { business } = useBusiness();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [productCategoryMap, setProductCategoryMap] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,47 +51,39 @@ export default function Products() {
     stock_quantity: '0',
     is_active: true,
     category_id: '',
-    badge: ''
+    badge: '',
+    tags: '',
+    selectedCategories: [] as string[],
   });
 
   useEffect(() => {
     if (!business) return;
     fetchProducts();
-    fetchCategories();
   }, [business]);
 
   const fetchProducts = async () => {
     if (!business) return;
     
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('business_id', business.id)
-        .order('created_at', { ascending: false });
+      const [prodRes, pcRes] = await Promise.all([
+        supabase.from('products').select('*').eq('business_id', business.id).order('created_at', { ascending: false }),
+        supabase.from('product_categories').select('product_id, category_id'),
+      ]);
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (prodRes.error) throw prodRes.error;
+      setProducts(prodRes.data || []);
+
+      // Build product -> categories map
+      const map: Record<string, string[]> = {};
+      (pcRes.data || []).forEach(pc => {
+        if (!map[pc.product_id]) map[pc.product_id] = [];
+        map[pc.product_id].push(pc.category_id);
+      });
+      setProductCategoryMap(map);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    if (!business) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('business_id', business.id);
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
     }
   };
 
@@ -110,7 +98,9 @@ export default function Products() {
         stock_quantity: String(product.stock_quantity),
         is_active: product.is_active,
         category_id: product.category_id || '',
-        badge: product.badge || ''
+        badge: product.badge || '',
+        tags: (product.tags || []).join(', '),
+        selectedCategories: productCategoryMap[product.id] || [],
       });
       setImagePreview(product.image_url || null);
     } else {
@@ -123,7 +113,9 @@ export default function Products() {
         stock_quantity: '0',
         is_active: true,
         category_id: '',
-        badge: ''
+        badge: '',
+        tags: '',
+        selectedCategories: [],
       });
       setImagePreview(null);
     }
@@ -187,6 +179,7 @@ export default function Products() {
     setSaving(true);
 
     try {
+      const tags = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
       const productData = {
         business_id: business.id,
         name: formData.name,
@@ -197,34 +190,36 @@ export default function Products() {
         is_active: formData.is_active,
         category_id: formData.category_id || null,
         badge: formData.badge || null,
+        tags,
       };
 
-      if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
+      let productId: string;
 
+      if (editingProduct) {
+        const { error } = await supabase.from('products').update(productData).eq('id', editingProduct.id);
         if (error) throw error;
+        productId = editingProduct.id;
         toast({ title: 'Sukses', description: 'Produkti u përditësua' });
       } else {
-        const { error } = await supabase
-          .from('products')
-          .insert(productData);
-
+        const { data: newProd, error } = await supabase.from('products').insert(productData).select('id').single();
         if (error) throw error;
+        productId = newProd.id;
         toast({ title: 'Sukses', description: 'Produkti u shtua' });
+      }
+
+      // Sync product_categories
+      await supabase.from('product_categories').delete().eq('product_id', productId);
+      if (formData.selectedCategories.length > 0) {
+        await supabase.from('product_categories').insert(
+          formData.selectedCategories.map(cid => ({ product_id: productId, category_id: cid }))
+        );
       }
 
       setIsDialogOpen(false);
       fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
-      toast({
-        title: 'Gabim',
-        description: 'Nuk u ruajt produkti',
-        variant: 'destructive'
-      });
+      toast({ title: 'Gabim', description: 'Nuk u ruajt produkti', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -496,19 +491,21 @@ export default function Products() {
             </div>
 
             <div className="space-y-2">
-              <Label>Kategoria</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(v) => setFormData({ ...formData, category_id: v === 'none' ? '' : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="Zgjidh kategorinë" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Pa kategori</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Kategoritë</Label>
+              <CategorySelector
+                selected={formData.selectedCategories}
+                onChange={(ids) => setFormData({ ...formData, selectedCategories: ids })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Etiketa (tags)</Label>
+              <Input
+                id="tags"
+                value={formData.tags}
+                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                placeholder="p.sh. organik, handmade, lokal (ndaj me presje)"
+              />
             </div>
 
             <div className="flex items-center justify-between">
