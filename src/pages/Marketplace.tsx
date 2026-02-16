@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { usePlatformCategories, buildCategoryTree, type PlatformCategory } from '@/hooks/usePlatformCategories';
+import { usePlatformCategories, buildCategoryTree } from '@/hooks/usePlatformCategories';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { Store, Loader2, Search, MapPin, Package, Star, ArrowRight, TrendingUp, Clock } from 'lucide-react';
@@ -22,6 +22,17 @@ interface BusinessWithProducts {
   order_count: number;
   created_at: string;
   category_slugs: string[];
+}
+
+interface SearchableProduct {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string | null;
+  business_id: string;
+  business_name: string;
+  business_subdomain: string;
+  categoryNames: string[];
 }
 
 function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; featured?: boolean }) {
@@ -63,18 +74,50 @@ function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; fe
   );
 }
 
+function ProductResultCard({ product }: { product: SearchableProduct }) {
+  return (
+    <Link
+      to={`/store/${product.business_subdomain}/product/${product.id}`}
+      className="group bg-card rounded-2xl border border-border/50 overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
+    >
+      <div className="aspect-square bg-muted/30 relative overflow-hidden">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Package className="h-12 w-12 text-muted-foreground/30" />
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">{product.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{product.business_name}</p>
+        {product.categoryNames.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {product.categoryNames.slice(0, 2).map(cn => (
+              <span key={cn} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{cn}</span>
+            ))}
+          </div>
+        )}
+        <p className="text-primary font-bold mt-2">€{product.price}</p>
+      </div>
+    </Link>
+  );
+}
+
 export default function Marketplace() {
   const [searchParams] = useSearchParams();
   const { data: platformCategories = [] } = usePlatformCategories();
   const [businesses, setBusinesses] = useState<BusinessWithProducts[]>([]);
+  const [allProducts, setAllProducts] = useState<SearchableProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [cityFilter, setCityFilter] = useState<string>('all');
-  // Products indexed by business_id for search
-  const [productsByBusiness, setProductsByBusiness] = useState<Record<string, { name: string; categoryNames: string[] }[]>>({});
 
   const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
+
+  const isSearching = search.trim().length > 0;
 
   useEffect(() => {
     async function load() {
@@ -82,18 +125,18 @@ export default function Marketplace() {
         supabase.from('businesses').select('id, name, description, logo_url, subdomain, address, is_featured, created_at').eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('orders').select('business_id'),
         supabase.from('product_categories').select('product_id, category_id'),
-        supabase.from('products').select('id, name, business_id, is_active').eq('is_active', true),
+        supabase.from('products').select('id, name, price, image_url, business_id').eq('is_active', true),
       ]);
 
       const bizList = bizRes.data || [];
       const orders = orderRes.data || [];
       const productCategories = pcRes.data || [];
-      const allProducts = prodRes.data || [];
+      const products = prodRes.data || [];
 
       const orderCounts: Record<string, number> = {};
       orders.forEach(o => { orderCounts[o.business_id] = (orderCounts[o.business_id] || 0) + 1; });
 
-      // Build product-to-category-name mapping
+      // Build lookups
       const catIdToName: Record<string, string> = {};
       platformCategories.forEach(c => { catIdToName[c.id] = c.name; });
 
@@ -104,25 +147,30 @@ export default function Marketplace() {
         if (name) prodCatMap[pc.product_id].push(name);
       });
 
-      // Index products by business for search
-      const prodIndex: Record<string, { name: string; categoryNames: string[] }[]> = {};
-      allProducts.forEach(p => {
-        if (!prodIndex[p.business_id]) prodIndex[p.business_id] = [];
-        prodIndex[p.business_id].push({ name: p.name, categoryNames: prodCatMap[p.id] || [] });
-      });
-      setProductsByBusiness(prodIndex);
+      const bizMap: Record<string, { name: string; subdomain: string }> = {};
+      bizList.forEach(b => { bizMap[b.id] = { name: b.name, subdomain: b.subdomain }; });
 
-      // Enrich businesses with counts & category slugs
+      // Build searchable products
+      const searchableProducts: SearchableProduct[] = products
+        .filter(p => bizMap[p.business_id])
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image_url: p.image_url,
+          business_id: p.business_id,
+          business_name: bizMap[p.business_id].name,
+          business_subdomain: bizMap[p.business_id].subdomain,
+          categoryNames: prodCatMap[p.id] || [],
+        }));
+      setAllProducts(searchableProducts);
+
+      // Enrich businesses
       const enriched: BusinessWithProducts[] = bizList.map(biz => {
-        const bizProds = allProducts.filter(p => p.business_id === biz.id);
+        const bizProds = products.filter(p => p.business_id === biz.id);
         const bizProductIds = bizProds.map(p => p.id);
-        const bizCatIds = productCategories
-          .filter(pc => bizProductIds.includes(pc.product_id))
-          .map(pc => pc.category_id);
-        const catSlugs = platformCategories
-          .filter(c => bizCatIds.includes(c.id))
-          .map(c => c.slug);
-
+        const bizCatIds = productCategories.filter(pc => bizProductIds.includes(pc.product_id)).map(pc => pc.category_id);
+        const catSlugs = platformCategories.filter(c => bizCatIds.includes(c.id)).map(c => c.slug);
         return {
           ...biz,
           is_featured: !!biz.is_featured,
@@ -141,7 +189,6 @@ export default function Marketplace() {
 
   const cities = [...new Set(businesses.map(b => b.address?.split(',').pop()?.trim()).filter(Boolean))] as string[];
 
-  // Find selected category and all its subcategory slugs
   const activeCategorySlugs = useMemo(() => {
     if (!activeCategory) return null;
     const cat = platformCategories.find(c => c.slug === activeCategory);
@@ -150,19 +197,22 @@ export default function Marketplace() {
     return [cat.slug, ...subs];
   }, [activeCategory, platformCategories, children]);
 
-  const filtered = businesses.filter(b => {
+  // Filter products when searching
+  const filteredProducts = useMemo(() => {
+    if (!isSearching) return [];
     const q = search.trim().toLowerCase();
-    const matchesBizName = !q || b.name.toLowerCase().includes(q) || b.description?.toLowerCase().includes(q);
-    // Also match if any product name or product category name contains the search
-    const bizProducts = productsByBusiness[b.id] || [];
-    const matchesProduct = q ? bizProducts.some(p => 
-      p.name.toLowerCase().includes(q) || 
+    return allProducts.filter(p =>
+      p.name.toLowerCase().includes(q) ||
       p.categoryNames.some(cn => cn.toLowerCase().includes(q))
-    ) : false;
-    const matchesSearch = matchesBizName || matchesProduct;
+    );
+  }, [search, allProducts, isSearching]);
+
+  // Filter businesses when NOT searching
+  const filtered = businesses.filter(b => {
+    if (isSearching) return false; // Don't show businesses during search
     const matchesCategory = !activeCategorySlugs || b.category_slugs.some(s => activeCategorySlugs.includes(s));
     const matchesCity = cityFilter === 'all' || b.address?.toLowerCase().includes(cityFilter.toLowerCase());
-    return matchesSearch && matchesCategory && matchesCity;
+    return matchesCategory && matchesCity;
   });
 
   const featuredBusinesses = filtered.filter(b => b.is_featured);
@@ -178,16 +228,18 @@ export default function Marketplace() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
-              Zbulo dyqanet në <span className="text-gradient-primary">eblej.com</span>
+              Zbulo {isSearching ? 'produktet' : 'dyqanet'} në <span className="text-gradient-primary">eblej.com</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">Shfleto bizneset lokale dhe porosit online direkt nga dyqani i tyre.</p>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+              {isSearching ? 'Rezultatet e kërkimit për produktet' : 'Shfleto bizneset lokale dhe porosit online direkt nga dyqani i tyre.'}
+            </p>
             
             <div className="max-w-2xl mx-auto flex gap-3 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Kërko dyqane..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+                <Input placeholder="Kërko produkte sipas emrit ose kategorisë..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
               </div>
-              {cities.length > 0 && (
+              {!isSearching && cities.length > 0 && (
                 <Select value={cityFilter} onValueChange={setCityFilter}>
                   <SelectTrigger className="w-[160px]">
                     <MapPin className="h-4 w-4 mr-1" />
@@ -203,7 +255,7 @@ export default function Marketplace() {
               )}
             </div>
 
-            {roots.length > 0 && (
+            {!isSearching && roots.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2">
                 <Button variant={activeCategory === null ? 'default' : 'outline'} size="sm" onClick={() => setActiveCategory(null)} className="rounded-full">Të gjitha</Button>
                 {roots.map(cat => {
@@ -220,6 +272,24 @@ export default function Marketplace() {
 
           {loading ? (
             <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : isSearching ? (
+            /* Product search results */
+            filteredProducts.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg">Nuk u gjet asnjë produkt për "{search}".</p>
+              </div>
+            ) : (
+              <section>
+                <div className="flex items-center gap-2 mb-6">
+                  <Package className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold text-foreground">{filteredProducts.length} produkte u gjetën</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                  {filteredProducts.map(product => <ProductResultCard key={product.id} product={product} />)}
+                </div>
+              </section>
+            )
           ) : filtered.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Store className="h-16 w-16 mx-auto mb-4 opacity-30" />
