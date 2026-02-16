@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
 const HeroSection = () => {
@@ -34,7 +34,7 @@ const HeroSection = () => {
 
             {/* Feature list */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
-              {["Pa setup teknik", "Subdomain falas", "0% komision"].map((feature) => (
+              {["Pa setup teknik", "Subdomain falas", "Vetëm €1/porosi"].map((feature) => (
                 <div key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   {feature}
@@ -50,9 +50,11 @@ const HeroSection = () => {
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button variant="hero-outline" size="xl" className="group">
-                <Play className="w-5 h-5" />
-                Shiko demo
+              <Button variant="hero-outline" size="xl" className="group" asChild>
+                <Link to="/marketplace">
+                  Shiko dyqanet
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </Link>
               </Button>
             </div>
 

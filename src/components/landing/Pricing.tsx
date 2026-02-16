@@ -4,53 +4,22 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Falas",
-    price: "€0",
-    period: "/muaj",
-    description: "Perfekt për të filluar",
-    features: [
-      "Deri në 20 produkte",
-      "Subdomain falas",
-      "Porosi të pakufizuara",
-      "Suport via email",
-    ],
-    cta: "Fillo falas",
-    variant: "outline" as const,
-    popular: false,
-  },
-  {
-    name: "Pro",
-    price: "€19",
-    period: "/muaj",
-    description: "Për biznese në rritje",
+    name: "Falas për të gjithë",
+    price: "€1",
+    period: "/porosi",
+    description: "Paguaj vetëm kur shet",
     features: [
       "Produkte të pakufizuara",
-      "Domain i personalizuar",
-      "Analitikë të avancuara",
-      "Suport prioritar",
-      "Eksport të të dhënave",
-      "Pa reklamë eblej",
+      "Subdomain falas",
+      "Porosi të pakufizuara",
+      "Dashboard analitik",
+      "Kuponë & zbritje",
+      "Notifikime porosish",
     ],
-    cta: "Fillo Pro",
+    cta: "Fillo falas",
     variant: "hero" as const,
     popular: true,
-  },
-  {
-    name: "Biznes",
-    price: "€49",
-    period: "/muaj",
-    description: "Për biznese të mëdha",
-    features: [
-      "Gjithçka në Pro",
-      "Disa dyqane",
-      "API access",
-      "Integrime të personalizuara",
-      "Account manager",
-      "SLA 99.9%",
-    ],
-    cta: "Kontakto",
-    variant: "outline" as const,
-    popular: false,
+    link: "/auth?mode=signup",
   },
 ];
 
@@ -64,24 +33,20 @@ const Pricing = () => {
             Çmimet
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Plani i duhur për{" "}
-            <span className="text-gradient-primary">çdo biznes</span>
+            Model i thjeshtë:{" "}
+            <span className="text-gradient-primary">€1 për porosi</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Fillo falas dhe upgrade kur të jesh gati.
+            Pa tarifa mujore, pa kosto të fshehura. Paguaj vetëm kur klientët porosisin.
           </p>
         </div>
 
-        {/* Pricing cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {/* Pricing card */}
+        <div className="max-w-lg mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-card rounded-2xl p-8 border shadow-soft ${
-                plan.popular
-                  ? "border-primary shadow-glow scale-105 z-10"
-                  : "border-border/50"
-              }`}
+              className="relative bg-card rounded-2xl p-8 border border-primary shadow-glow"
             >
               {/* Popular badge */}
               {plan.popular && (
@@ -116,7 +81,7 @@ const Pricing = () => {
 
               {/* CTA */}
               <Button variant={plan.variant} size="lg" className="w-full" asChild>
-                <Link to="/auth?mode=signup">{plan.cta}</Link>
+                <Link to={plan.link}>{plan.cta}</Link>
               </Button>
             </div>
           ))}
