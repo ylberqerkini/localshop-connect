@@ -71,49 +71,67 @@ export default function Marketplace() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [cityFilter, setCityFilter] = useState<string>('all');
+  // Products indexed by business_id for search
+  const [productsByBusiness, setProductsByBusiness] = useState<Record<string, { name: string; categoryNames: string[] }[]>>({});
 
   const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
 
   useEffect(() => {
     async function load() {
-      const [bizRes, orderRes, pcRes] = await Promise.all([
+      const [bizRes, orderRes, pcRes, prodRes] = await Promise.all([
         supabase.from('businesses').select('id, name, description, logo_url, subdomain, address, is_featured, created_at').eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('orders').select('business_id'),
         supabase.from('product_categories').select('product_id, category_id'),
+        supabase.from('products').select('id, name, business_id, is_active').eq('is_active', true),
       ]);
 
       const bizList = bizRes.data || [];
       const orders = orderRes.data || [];
       const productCategories = pcRes.data || [];
+      const allProducts = prodRes.data || [];
 
       const orderCounts: Record<string, number> = {};
       orders.forEach(o => { orderCounts[o.business_id] = (orderCounts[o.business_id] || 0) + 1; });
 
-      // Get product counts & category slugs per business
-      const enriched: BusinessWithProducts[] = await Promise.all(
-        bizList.map(async (biz) => {
-          const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('business_id', biz.id).eq('is_active', true);
-          
-          // Get products for this business to find their categories
-          const { data: bizProducts } = await supabase.from('products').select('id').eq('business_id', biz.id).eq('is_active', true);
-          const bizProductIds = (bizProducts || []).map(p => p.id);
-          const bizCatIds = productCategories
-            .filter(pc => bizProductIds.includes(pc.product_id))
-            .map(pc => pc.category_id);
-          const catSlugs = platformCategories
-            .filter(c => bizCatIds.includes(c.id))
-            .map(c => c.slug);
+      // Build product-to-category-name mapping
+      const catIdToName: Record<string, string> = {};
+      platformCategories.forEach(c => { catIdToName[c.id] = c.name; });
 
-          return {
-            ...biz,
-            is_featured: !!biz.is_featured,
-            product_count: count ?? 0,
-            order_count: orderCounts[biz.id] || 0,
-            created_at: biz.created_at,
-            category_slugs: [...new Set(catSlugs)],
-          };
-        })
-      );
+      const prodCatMap: Record<string, string[]> = {};
+      productCategories.forEach(pc => {
+        if (!prodCatMap[pc.product_id]) prodCatMap[pc.product_id] = [];
+        const name = catIdToName[pc.category_id];
+        if (name) prodCatMap[pc.product_id].push(name);
+      });
+
+      // Index products by business for search
+      const prodIndex: Record<string, { name: string; categoryNames: string[] }[]> = {};
+      allProducts.forEach(p => {
+        if (!prodIndex[p.business_id]) prodIndex[p.business_id] = [];
+        prodIndex[p.business_id].push({ name: p.name, categoryNames: prodCatMap[p.id] || [] });
+      });
+      setProductsByBusiness(prodIndex);
+
+      // Enrich businesses with counts & category slugs
+      const enriched: BusinessWithProducts[] = bizList.map(biz => {
+        const bizProds = allProducts.filter(p => p.business_id === biz.id);
+        const bizProductIds = bizProds.map(p => p.id);
+        const bizCatIds = productCategories
+          .filter(pc => bizProductIds.includes(pc.product_id))
+          .map(pc => pc.category_id);
+        const catSlugs = platformCategories
+          .filter(c => bizCatIds.includes(c.id))
+          .map(c => c.slug);
+
+        return {
+          ...biz,
+          is_featured: !!biz.is_featured,
+          product_count: bizProds.length,
+          order_count: orderCounts[biz.id] || 0,
+          created_at: biz.created_at,
+          category_slugs: [...new Set(catSlugs)],
+        };
+      });
 
       setBusinesses(enriched);
       setLoading(false);
@@ -133,7 +151,15 @@ export default function Marketplace() {
   }, [activeCategory, platformCategories, children]);
 
   const filtered = businesses.filter(b => {
-    const matchesSearch = !search.trim() || b.name.toLowerCase().includes(search.toLowerCase()) || b.description?.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    const matchesBizName = !q || b.name.toLowerCase().includes(q) || b.description?.toLowerCase().includes(q);
+    // Also match if any product name or product category name contains the search
+    const bizProducts = productsByBusiness[b.id] || [];
+    const matchesProduct = q ? bizProducts.some(p => 
+      p.name.toLowerCase().includes(q) || 
+      p.categoryNames.some(cn => cn.toLowerCase().includes(q))
+    ) : false;
+    const matchesSearch = matchesBizName || matchesProduct;
     const matchesCategory = !activeCategorySlugs || b.category_slugs.some(s => activeCategorySlugs.includes(s));
     const matchesCity = cityFilter === 'all' || b.address?.toLowerCase().includes(cityFilter.toLowerCase());
     return matchesSearch && matchesCategory && matchesCity;
