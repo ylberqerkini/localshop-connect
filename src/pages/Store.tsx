@@ -93,9 +93,27 @@ function StoreContent() {
     );
   }
 
+  const { clearCart, addItem } = useCart();
+
+  const handleBuyNow = (product: { id: string; name: string; price: number; image_url: string | null }) => {
+    clearCart();
+    addItem(product);
+    setCheckoutOpen(true);
+  };
+
   // If viewing a specific product, render ProductDetail
   if (productId) {
-    return <ProductDetail />;
+    return (
+      <>
+        <ProductDetail onBuyNow={handleBuyNow} />
+        <CheckoutForm
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          businessId={business.id}
+          deliveryFee={business.delivery_price ?? 0}
+        />
+      </>
+    );
   }
 
   const filtered = selectedCategory
@@ -165,7 +183,7 @@ function StoreContent() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map(product => (
-              <ProductCard key={product.id} {...product} subdomain={subdomain} badge={product.badge} />
+              <ProductCard key={product.id} {...product} subdomain={subdomain} badge={product.badge} onBuyNow={handleBuyNow} />
             ))}
           </div>
         )}
