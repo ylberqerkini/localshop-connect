@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useBusiness } from '@/hooks/useBusiness';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Filter, Download, Eye, Clock, CheckCircle, Truck, Package, XCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Search, Filter, Download, Eye, Clock, CheckCircle, Truck, Package, XCircle, Printer, Edit, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { sq } from 'date-fns/locale';
 
@@ -19,9 +22,15 @@ interface Order {
   order_number: string;
   status: OrderStatus;
   total: number;
+  subtotal: number;
+  delivery_fee: number | null;
+  platform_fee: number;
+  discount_amount: number | null;
+  coupon_code: string | null;
   created_at: string;
   city: string | null;
   notes: string | null;
+  customer_id: string | null;
   customer: {
     full_name: string;
     phone: string;
@@ -45,11 +54,22 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
 
 export default function Orders() {
   const { business } = useBusiness();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: '',
+    address: '',
+    city: '',
+    notes: '',
+    status: '' as OrderStatus,
+  });
 
   useEffect(() => {
     if (!business) return;
@@ -71,7 +91,6 @@ export default function Orders() {
 
       if (error) throw error;
 
-      // Fetch order items for each order
       const ordersWithItems = await Promise.all(
         (ordersData || []).map(async (order) => {
           const { data: items } = await supabase
@@ -113,6 +132,156 @@ export default function Orders() {
     } catch (error) {
       console.error('Error updating order status:', error);
     }
+  };
+
+  const openEditDialog = (order: Order) => {
+    setEditOrder(order);
+    setEditForm({
+      full_name: order.customer?.full_name || '',
+      phone: order.customer?.phone || '',
+      address: order.customer?.address || '',
+      city: order.city || '',
+      notes: order.notes || '',
+      status: order.status,
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editOrder) return;
+    setEditSaving(true);
+    try {
+      // Update order fields
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({
+          city: editForm.city || null,
+          notes: editForm.notes || null,
+          status: editForm.status,
+        })
+        .eq('id', editOrder.id);
+      if (orderError) throw orderError;
+
+      // Update customer if exists
+      if (editOrder.customer_id) {
+        const { error: custError } = await supabase
+          .from('customers')
+          .update({
+            full_name: editForm.full_name,
+            phone: editForm.phone,
+            address: editForm.address || null,
+          })
+          .eq('id', editOrder.customer_id);
+        if (custError) throw custError;
+      }
+
+      toast({ title: 'Sukses', description: 'Porosia u përditësua' });
+      setEditOrder(null);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({ title: 'Gabim', description: 'Nuk u përditësua porosia', variant: 'destructive' });
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handlePrintInvoice = (order: Order) => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+
+    const itemsRows = order.items.map(item => `
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #eee;">${item.product_name}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">€${Number(item.unit_price).toFixed(2)}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">€${Number(item.total).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Faturë - #${order.order_number}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; color: #333; padding: 40px; max-width: 800px; margin: auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 3px solid #333; padding-bottom: 20px; }
+    .header h1 { font-size: 28px; }
+    .header .meta { text-align: right; font-size: 14px; color: #666; }
+    .section { margin-bottom: 24px; }
+    .section h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
+    .section p { font-size: 14px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #333; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    th:nth-child(2) { text-align: center; }
+    th:nth-child(3), th:nth-child(4) { text-align: right; }
+    .totals { margin-top: 16px; border-top: 2px solid #333; padding-top: 12px; }
+    .totals .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+    .totals .row.grand { font-size: 18px; font-weight: bold; border-top: 1px solid #ccc; padding-top: 8px; margin-top: 8px; }
+    .footer { margin-top: 48px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 16px; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>FATURË</h1>
+      <p style="color:#666;font-size:14px;margin-top:4px;">${business?.name || ''}</p>
+    </div>
+    <div class="meta">
+      <p><strong>#${order.order_number}</strong></p>
+      <p>${format(new Date(order.created_at), 'dd MMMM yyyy, HH:mm', { locale: sq })}</p>
+      <p style="margin-top:4px;">Status: ${statusConfig[order.status].label}</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Klienti</h3>
+    <p><strong>${order.customer?.full_name || 'N/A'}</strong></p>
+    <p>${order.customer?.phone || ''}</p>
+    <p>${order.customer?.address || ''}${order.city ? ', ' + order.city : ''}</p>
+  </div>
+
+  <div class="section">
+    <h3>Produktet</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Produkti</th>
+          <th>Sasia</th>
+          <th>Çmimi</th>
+          <th>Totali</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsRows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="totals">
+    <div class="row"><span>Nëntotali</span><span>€${Number(order.subtotal).toFixed(2)}</span></div>
+    ${order.delivery_fee ? `<div class="row"><span>Transporti</span><span>€${Number(order.delivery_fee).toFixed(2)}</span></div>` : ''}
+    ${order.discount_amount ? `<div class="row"><span>Zbritje${order.coupon_code ? ' (' + order.coupon_code + ')' : ''}</span><span>-€${Number(order.discount_amount).toFixed(2)}</span></div>` : ''}
+    <div class="row"><span>Tarifë platforme</span><span>€${Number(order.platform_fee || 1).toFixed(2)}</span></div>
+    <div class="row grand"><span>TOTALI</span><span>€${Number(order.total).toFixed(2)}</span></div>
+  </div>
+
+  ${order.notes ? `<div class="section" style="margin-top:24px;"><h3>Shënime</h3><p>${order.notes}</p></div>` : ''}
+
+  <div class="footer">
+    <p>${business?.name || ''} ${business?.phone ? '• Tel: ' + business.phone : ''} ${business?.email ? '• ' + business.email : ''}</p>
+    <p style="margin-top:4px;">${business?.address || ''}</p>
+  </div>
+
+  <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`;
+
+    win.document.write(html);
+    win.document.close();
   };
 
   const filteredOrders = orders.filter(order => {
@@ -222,13 +391,32 @@ export default function Orders() {
                         {format(new Date(order.created_at), 'dd MMM yyyy', { locale: sq })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Shiko"
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Ndrysho"
+                            onClick={() => openEditDialog(order)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Printo faturën"
+                            onClick={() => handlePrintInvoice(order)}
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -248,7 +436,6 @@ export default function Orders() {
           
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Customer info */}
               <div className="bg-muted/50 rounded-lg p-4">
                 <h4 className="font-medium mb-2">Informacioni i klientit</h4>
                 <p className="text-sm">{selectedOrder.customer?.full_name}</p>
@@ -256,7 +443,6 @@ export default function Orders() {
                 <p className="text-sm text-muted-foreground">{selectedOrder.customer?.address}</p>
               </div>
 
-              {/* Order items */}
               <div>
                 <h4 className="font-medium mb-2">Produktet</h4>
                 <div className="space-y-2">
@@ -269,11 +455,23 @@ export default function Orders() {
                   <div className="border-t pt-2 space-y-1">
                     <div className="flex justify-between text-sm">
                       <span>Nëntotali</span>
-                      <span>€{Number(selectedOrder.total - (selectedOrder as any).delivery_fee - (selectedOrder as any).platform_fee).toFixed(2)}</span>
+                      <span>€{Number(selectedOrder.subtotal).toFixed(2)}</span>
                     </div>
+                    {selectedOrder.delivery_fee ? (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Transporti</span>
+                        <span>€{Number(selectedOrder.delivery_fee).toFixed(2)}</span>
+                      </div>
+                    ) : null}
+                    {selectedOrder.discount_amount ? (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Zbritje{selectedOrder.coupon_code ? ` (${selectedOrder.coupon_code})` : ''}</span>
+                        <span>-€{Number(selectedOrder.discount_amount).toFixed(2)}</span>
+                      </div>
+                    ) : null}
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Tarifë platforme</span>
-                      <span>€{Number((selectedOrder as any).platform_fee || 1).toFixed(2)}</span>
+                      <span>€{Number(selectedOrder.platform_fee || 1).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-medium">
                       <span>Totali</span>
@@ -283,7 +481,6 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* Notes */}
               {selectedOrder.notes && (
                 <div>
                   <h4 className="font-medium mb-2">Shënime</h4>
@@ -291,7 +488,6 @@ export default function Orders() {
                 </div>
               )}
 
-              {/* Status update */}
               <div>
                 <h4 className="font-medium mb-2">Ndrysho statusin</h4>
                 <Select
@@ -310,8 +506,88 @@ export default function Orders() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="gap-2 flex-1" onClick={() => handlePrintInvoice(selectedOrder)}>
+                  <Printer className="h-4 w-4" />
+                  Printo faturën
+                </Button>
+                <Button variant="outline" className="gap-2 flex-1" onClick={() => { setSelectedOrder(null); openEditDialog(selectedOrder); }}>
+                  <Edit className="h-4 w-4" />
+                  Ndrysho
+                </Button>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit order dialog */}
+      <Dialog open={!!editOrder} onOpenChange={() => setEditOrder(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ndrysho porosinë #{editOrder?.order_number}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Emri i klientit</Label>
+              <Input
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefoni</Label>
+              <Input
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Adresa</Label>
+              <Input
+                value={editForm.address}
+                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Qyteti</Label>
+              <Input
+                value={editForm.city}
+                onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Shënime</Label>
+              <Textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Statusi</Label>
+              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as OrderStatus })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Në pritje</SelectItem>
+                  <SelectItem value="confirmed">Konfirmuar</SelectItem>
+                  <SelectItem value="shipped">Dërguar</SelectItem>
+                  <SelectItem value="delivered">Dorëzuar</SelectItem>
+                  <SelectItem value="cancelled">Anuluar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOrder(null)}>Anulo</Button>
+            <Button onClick={handleEditSave} disabled={editSaving}>
+              {editSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ruaj ndryshimet
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
