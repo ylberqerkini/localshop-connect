@@ -583,6 +583,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           price: number
+          shipping_cost: number | null
           stock_quantity: number | null
           tags: string[] | null
           updated_at: string
@@ -598,6 +599,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           price: number
+          shipping_cost?: number | null
           stock_quantity?: number | null
           tags?: string[] | null
           updated_at?: string
@@ -613,6 +615,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           price?: number
+          shipping_cost?: number | null
           stock_quantity?: number | null
           tags?: string[] | null
           updated_at?: string
