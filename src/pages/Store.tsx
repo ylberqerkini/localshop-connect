@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CartProvider } from '@/hooks/useCart';
+import { CartProvider, useCart } from '@/hooks/useCart';
 import { ProductCard } from '@/components/store/ProductCard';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { CheckoutForm } from '@/components/store/CheckoutForm';
