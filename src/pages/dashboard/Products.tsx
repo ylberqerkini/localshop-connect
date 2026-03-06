@@ -26,6 +26,7 @@ interface Product {
   category_id: string | null;
   badge: string | null;
   tags: string[] | null;
+  shipping_cost: number;
 }
 
 export default function Products() {
@@ -53,6 +54,7 @@ export default function Products() {
     category_id: '',
     badge: '',
     tags: '',
+    shipping_cost: '0',
     selectedCategories: [] as string[],
   });
 
@@ -100,6 +102,7 @@ export default function Products() {
         category_id: product.category_id || '',
         badge: product.badge || '',
         tags: (product.tags || []).join(', '),
+        shipping_cost: String(product.shipping_cost || 0),
         selectedCategories: productCategoryMap[product.id] || [],
       });
       setImagePreview(product.image_url || null);
@@ -115,6 +118,7 @@ export default function Products() {
         category_id: '',
         badge: '',
         tags: '',
+        shipping_cost: '0',
         selectedCategories: [],
       });
       setImagePreview(null);
@@ -191,6 +195,7 @@ export default function Products() {
         category_id: formData.category_id || null,
         badge: formData.badge || null,
         tags,
+        shipping_cost: parseFloat(formData.shipping_cost) || 0,
       };
 
       let productId: string;
