@@ -451,7 +451,19 @@ export default function Products() {
                   onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                   placeholder="0"
                 />
-              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="shipping_cost">Kosto e postës (€)</Label>
+              <Input
+                id="shipping_cost"
+                type="number"
+                step="0.01"
+                value={formData.shipping_cost}
+                onChange={(e) => setFormData({ ...formData, shipping_cost: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
             </div>
 
             <div className="space-y-2">
