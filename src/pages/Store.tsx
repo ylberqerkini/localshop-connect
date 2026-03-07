@@ -156,48 +156,27 @@ function StoreContent() {
       </div>
     );
   }
-    const tokens = tokenize(searchQuery);
-    const categoryMap = new Map(categories.map(category => [category.id, normalize(category.name)]));
 
-    const ranked = products
-      .filter(product => !selectedCategory || product.category_id === selectedCategory)
-      .filter(product => !onlyAvailable || (product.stock_quantity === null || product.stock_quantity > 0))
-      .map(product => {
-        if (!hasSearch) return { product, score: 0 };
+  const handleBuyNow = (product: { id: string; name: string; price: number; image_url: string | null }) => {
+    clearCart();
+    addItem(product);
+    setCheckoutOpen(true);
+  };
 
-        const name = normalize(product.name);
-        const description = normalize(product.description || '');
-        const categoryName = normalize(categoryMap.get(product.category_id || '') || '');
-
-        let score = 0;
-        tokens.forEach(token => {
-          if (name.startsWith(token)) score += 12;
-          else if (name.includes(token)) score += 8;
-          if (categoryName.includes(token)) score += 5;
-          if (description.includes(token)) score += 3;
-        });
-
-        if (tokens.length > 1 && tokens.every(token => name.includes(token))) {
-          score += 8;
-        }
-
-        return { product, score };
-      })
-      .filter(item => !hasSearch || item.score > 0);
-
-    ranked.sort((a, b) => {
-      if (sortBy === 'price-asc') return a.product.price - b.product.price;
-      if (sortBy === 'price-desc') return b.product.price - a.product.price;
-      if (sortBy === 'name') return a.product.name.localeCompare(b.product.name);
-      if (sortBy === 'relevance') {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.product.name.localeCompare(b.product.name);
-      }
-      return products.findIndex(p => p.id === a.product.id) - products.findIndex(p => p.id === b.product.id);
-    });
-
-    return ranked.map(item => item.product);
-  }, [products, categories, selectedCategory, onlyAvailable, hasSearch, searchQuery, sortBy]);
+  // If viewing a specific product, render ProductDetail
+  if (productId) {
+    return (
+      <>
+        <ProductDetail onBuyNow={handleBuyNow} />
+        <CheckoutForm
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          businessId={business.id}
+          deliveryFee={business.delivery_price ?? 0}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
