@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Store, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,15 +16,40 @@ const businessSchema = z.object({
     .min(3, 'Subdomain duhet të ketë të paktën 3 karaktere')
     .max(30, 'Subdomain nuk mund të ketë më shumë se 30 karaktere')
     .regex(/^[a-z0-9-]+$/, 'Vetëm shkronja të vogla, numra dhe viza'),
+  accepts_online_payments: z.boolean(),
+  iban: z.string().trim().optional(),
+  bank_account_holder: z.string().trim().optional(),
+  bank_name: z.string().trim().optional(),
+}).superRefine((value, ctx) => {
+  if (!value.accepts_online_payments) return;
+
+  if (!value.iban) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'IBAN është i detyrueshëm për pagesa online.',
+      path: ['iban'],
+    });
+  }
+
+  if (!value.bank_account_holder) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Emri i mbajtësit të llogarisë është i detyrueshëm.',
+      path: ['bank_account_holder'],
+    });
+  }
 });
 
 export default function CreateBusiness() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [name, setName] = useState('');
   const [subdomain, setSubdomain] = useState('');
+  const [acceptsOnlinePayments, setAcceptsOnlinePayments] = useState(false);
+  const [iban, setIban] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState('');
+  const [bankName, setBankName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +65,14 @@ export default function CreateBusiness() {
     e.preventDefault();
     setError(null);
 
-    const validation = businessSchema.safeParse({ name, subdomain });
+    const validation = businessSchema.safeParse({
+      name,
+      subdomain,
+      accepts_online_payments: acceptsOnlinePayments,
+      iban,
+      bank_account_holder: bankAccountHolder,
+      bank_name: bankName,
+    });
     if (!validation.success) {
       setError(validation.error.errors[0].message);
       return;
@@ -73,7 +105,11 @@ export default function CreateBusiness() {
         .insert({
           owner_id: user.id,
           name,
-          subdomain
+          subdomain,
+          accepts_online_payments: acceptsOnlinePayments,
+          iban: acceptsOnlinePayments ? iban.trim().toUpperCase() : null,
+          bank_account_holder: acceptsOnlinePayments ? bankAccountHolder.trim() : null,
+          bank_name: acceptsOnlinePayments ? (bankName.trim() || null) : null,
         });
 
       if (createError) throw createError;
@@ -95,7 +131,7 @@ export default function CreateBusiness() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-0 shadow-xl">
+      <Card className="w-full max-w-lg border-0 shadow-xl">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-accent rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Store className="h-8 w-8 text-white" />
@@ -138,6 +174,55 @@ export default function CreateBusiness() {
               <p className="text-sm text-muted-foreground">
                 Kjo do të jetë adresa e dyqanit tuaj online
               </p>
+            </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-4 bg-muted/20">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">Aktivizo pagesat online</p>
+                  <p className="text-sm text-muted-foreground">
+                    Shto të dhënat bankare për të pranuar pagesat në llogari.
+                  </p>
+                </div>
+                <Switch
+                  checked={acceptsOnlinePayments}
+                  onCheckedChange={setAcceptsOnlinePayments}
+                />
+              </div>
+
+              {acceptsOnlinePayments && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_holder">Emri i mbajtësit të llogarisë</Label>
+                    <Input
+                      id="bank_holder"
+                      placeholder="Sh.p.k. Biznesi Im"
+                      value={bankAccountHolder}
+                      onChange={(e) => setBankAccountHolder(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="iban">IBAN</Label>
+                    <Input
+                      id="iban"
+                      placeholder="XK051234567890123456"
+                      value={iban}
+                      onChange={(e) => setIban(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_name">Banka (opsionale)</Label>
+                    <Input
+                      id="bank_name"
+                      placeholder="Banka Ekonomike"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (

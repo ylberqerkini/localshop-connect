@@ -24,6 +24,11 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
   const cardContent = (
     <div className="aspect-square bg-muted overflow-hidden relative">
       <ProductBadge badge={badge || null} />
+      {outOfStock && (
+        <span className="absolute top-2 left-2 z-10 rounded-full bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-destructive border border-destructive/20">
+          Pa stok
+        </span>
+      )}
       {image_url ? (
         <img src={image_url} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
       ) : (
@@ -35,7 +40,7 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
   );
 
   return (
-    <div className="group rounded-xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div className="group rounded-2xl border border-border/70 bg-card overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       {subdomain ? (
         <Link to={`/store/${subdomain}/product/${id}`}>
           {cardContent}
@@ -43,13 +48,13 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
       ) : (
         cardContent
       )}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2.5">
         <div className="flex items-start justify-between gap-1">
           <h3 className="font-semibold text-foreground line-clamp-1 flex-1">{name}</h3>
           <WishlistButton productId={id} />
         </div>
         {description && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-1.5">
           <div>
             <span className="text-lg font-bold text-foreground">€{price.toFixed(2)}</span>
             {lowStock && <p className="text-xs text-destructive">Vetëm {stock_quantity} copë!</p>}

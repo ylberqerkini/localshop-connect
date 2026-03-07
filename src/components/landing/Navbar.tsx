@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Store, ArrowLeftRight, Menu, X, User } from "lucide-react";
+import { ArrowLeftRight, Menu, X, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import eblejLogo from "@/assets/eblej.png";
 
 interface NavbarProps {
   view?: "buyer" | "business";
@@ -22,10 +23,11 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-hero flex items-center justify-center shadow-glow">
-              <Store className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">eblej.com</span>
+            <img
+              src={eblejLogo}
+              alt="eblej"
+              className="h-10 sm:h-11 lg:h-12 w-auto max-w-[180px] object-contain"
+            />
           </div>
 
           {/* Desktop Navigation Links */}

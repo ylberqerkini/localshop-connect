@@ -27,12 +27,27 @@ interface BusinessWithProducts {
 interface SearchableProduct {
   id: string;
   name: string;
+  description: string | null;
   price: number;
   image_url: string | null;
   business_id: string;
   business_name: string;
   business_subdomain: string;
+  business_order_count: number;
   categoryNames: string[];
+}
+
+interface RankedProduct {
+  product: SearchableProduct;
+  score: number;
+}
+
+function normalizeText(value: string) {
+  return value.toLowerCase().trim();
+}
+
+function tokenizeQuery(value: string) {
+  return normalizeText(value).split(/\s+/).filter(Boolean);
 }
 
 function BusinessCard({ biz, featured = false }: { biz: BusinessWithProducts; featured?: boolean }) {
@@ -114,6 +129,8 @@ export default function Marketplace() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [cityFilter, setCityFilter] = useState<string>('all');
+  const [searchCategory, setSearchCategory] = useState<string>('all');
+  const [searchSort, setSearchSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'shop'>('relevance');
 
   const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
 
@@ -125,7 +142,7 @@ export default function Marketplace() {
         supabase.from('businesses').select('id, name, description, logo_url, subdomain, address, is_featured, created_at').eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('orders').select('business_id'),
         supabase.from('product_categories').select('product_id, category_id'),
-        supabase.from('products').select('id, name, price, image_url, business_id').eq('is_active', true),
+        supabase.from('products').select('id, name, description, price, image_url, business_id').eq('is_active', true),
       ]);
 
       const bizList = bizRes.data || [];
@@ -156,11 +173,13 @@ export default function Marketplace() {
         .map(p => ({
           id: p.id,
           name: p.name,
+          description: p.description,
           price: p.price,
           image_url: p.image_url,
           business_id: p.business_id,
           business_name: bizMap[p.business_id].name,
           business_subdomain: bizMap[p.business_id].subdomain,
+          business_order_count: orderCounts[p.business_id] || 0,
           categoryNames: prodCatMap[p.id] || [],
         }));
       setAllProducts(searchableProducts);
@@ -197,15 +216,63 @@ export default function Marketplace() {
     return [cat.slug, ...subs];
   }, [activeCategory, platformCategories, children]);
 
-  // Filter products when searching
+  const searchableCategoryNames = useMemo(() => {
+    const unique = new Set<string>();
+    allProducts.forEach(product => {
+      product.categoryNames.forEach(catName => unique.add(catName));
+    });
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [allProducts]);
+
+  // Score and filter products when searching
   const filteredProducts = useMemo(() => {
     if (!isSearching) return [];
-    const q = search.trim().toLowerCase();
-    return allProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.categoryNames.some(cn => cn.toLowerCase().includes(q))
-    );
-  }, [search, allProducts, isSearching]);
+    const tokens = tokenizeQuery(search);
+    const ranked = allProducts
+      .map((product): RankedProduct => {
+        const name = normalizeText(product.name);
+        const description = normalizeText(product.description || '');
+        const business = normalizeText(product.business_name);
+        const categories = product.categoryNames.map(cn => normalizeText(cn));
+
+        let score = 0;
+        tokens.forEach(token => {
+          if (name.startsWith(token)) score += 12;
+          else if (name.includes(token)) score += 8;
+
+          if (categories.some(cat => cat.startsWith(token))) score += 6;
+          else if (categories.some(cat => cat.includes(token))) score += 4;
+
+          if (business.includes(token)) score += 3;
+          if (description.includes(token)) score += 2;
+        });
+
+        if (tokens.length > 1 && tokens.every(token => name.includes(token))) {
+          score += 10;
+        }
+
+        return { product, score };
+      })
+      .filter(item => item.score > 0);
+
+    const categoryFiltered = searchCategory === 'all'
+      ? ranked
+      : ranked.filter(item => item.product.categoryNames.includes(searchCategory));
+
+    const sorted = [...categoryFiltered].sort((a, b) => {
+      if (searchSort === 'price-asc') return a.product.price - b.product.price;
+      if (searchSort === 'price-desc') return b.product.price - a.product.price;
+      if (searchSort === 'shop') return a.product.business_name.localeCompare(b.product.business_name);
+
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.product.business_order_count !== a.product.business_order_count) {
+        return b.product.business_order_count - a.product.business_order_count;
+      }
+      return a.product.name.localeCompare(b.product.name);
+    });
+
+    return sorted.map(item => item.product);
+  }, [search, allProducts, isSearching, searchCategory, searchSort]);
 
   // Filter businesses when NOT searching
   const filtered = businesses.filter(b => {
@@ -254,6 +321,34 @@ export default function Marketplace() {
                 </Select>
               )}
             </div>
+
+            {isSearching && (
+              <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select value={searchCategory} onValueChange={setSearchCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtro sipas kategorisë" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Të gjitha kategoritë</SelectItem>
+                    {searchableCategoryNames.map(categoryName => (
+                      <SelectItem key={categoryName} value={categoryName}>{categoryName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={searchSort} onValueChange={(value) => setSearchSort(value as 'relevance' | 'price-asc' | 'price-desc' | 'shop')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Renditja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relevance">Më relevante</SelectItem>
+                    <SelectItem value="price-asc">Çmimi: i ulët në të lartë</SelectItem>
+                    <SelectItem value="price-desc">Çmimi: i lartë në të ulët</SelectItem>
+                    <SelectItem value="shop">Sipas dyqanit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {!isSearching && roots.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2">

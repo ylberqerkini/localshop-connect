@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, ShoppingBag, Star, TrendingUp, Search } from "lucide-react";
 import { usePlatformCategories, buildCategoryTree } from "@/hooks/usePlatformCategories";
 import { getCategoryIcon } from "@/lib/categoryIcons";
+import heroVideo from "@/assets/UMAG1 (1).mp4";
 
 const BuyerHero = () => {
   const [query, setQuery] = useState("");
@@ -19,10 +20,19 @@ const BuyerHero = () => {
 
   return (
     <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-24 overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-gradient-subtle" />
-      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      {/* Video background */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover opacity-[0.65]"
+        autoPlay
+        loop
+        muted
+        playsInline
+      >
+        <source src={heroVideo} type="video/mp4" />
+      </video>
+
+      {/* Overlay for text readability */}
+      <div className="absolute inset-0 bg-background/35" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-3xl mx-auto text-center animate-fade-up">

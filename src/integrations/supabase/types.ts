@@ -40,7 +40,10 @@ export type Database = {
       }
       businesses: {
         Row: {
+          accepts_online_payments: boolean
           address: string | null
+          bank_account_holder: string | null
+          bank_name: string | null
           business_category: string | null
           cash_on_delivery: boolean | null
           created_at: string
@@ -61,7 +64,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepts_online_payments?: boolean
           address?: string | null
+          bank_account_holder?: string | null
+          bank_name?: string | null
           business_category?: string | null
           cash_on_delivery?: boolean | null
           created_at?: string
@@ -82,7 +88,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepts_online_payments?: boolean
           address?: string | null
+          bank_account_holder?: string | null
+          bank_name?: string | null
           business_category?: string | null
           cash_on_delivery?: boolean | null
           created_at?: string

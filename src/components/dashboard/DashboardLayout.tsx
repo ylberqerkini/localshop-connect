@@ -16,13 +16,13 @@ import {
   Tag,
   Menu,
   X,
-  Store,
   ExternalLink,
   Shield,
   Wallet,
   Ticket,
   Star,
 } from 'lucide-react';
+import eblejLogo from '@/assets/eblej.png';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -62,7 +62,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
         <div className="ml-4 flex items-center gap-2">
-          <Store className="h-5 w-5 text-primary" />
+          <img
+            src={eblejLogo}
+            alt="eblej"
+            className="h-7 sm:h-8 w-auto max-w-[140px] object-contain"
+          />
           <span className="font-semibold">{business?.name || 'eblej.com'}</span>
         </div>
       </header>
@@ -76,9 +80,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex flex-col h-full">
           <div className="h-16 flex items-center px-6 border-b">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-accent rounded-lg flex items-center justify-center">
-                <Store className="h-4 w-4 text-white" />
-              </div>
+              <img
+                src={eblejLogo}
+                alt="eblej"
+                className="h-9 sm:h-10 w-auto max-w-[140px] object-contain"
+              />
               <span className="font-bold text-lg">eblej</span>
             </Link>
           </div>

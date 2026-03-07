@@ -1,4 +1,5 @@
-import { Store, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import eblejLogo from "@/assets/eblej.png";
 
 const Footer = () => {
   return (
@@ -8,10 +9,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-accent flex items-center justify-center">
-                <Store className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <span className="text-xl font-bold">eblej.com</span>
+              <img
+                src={eblejLogo}
+                alt="eblej"
+                className="h-10 sm:h-12 w-auto max-w-[200px] object-contain"
+              />
             </div>
             <p className="text-muted-foreground text-sm mb-6">
               Platforma e shitjeve online për bizneset lokale në Kosovë dhe Shqipëri.

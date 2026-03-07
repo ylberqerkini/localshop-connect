@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { lovable } from '@/integrations/lovable/index';
+import eblejLogo from '@/assets/eblej.png';
 
 const authSchema = z.object({
   email: z.string().email('Email i pavlefshëm'),
@@ -114,10 +115,11 @@ export default function Auth() {
 
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-gradient-accent rounded-xl flex items-center justify-center">
-            <Store className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-bold text-2xl">eblej.com</span>
+          <img
+            src={eblejLogo}
+            alt="eblej"
+            className="h-12 sm:h-14 w-auto max-w-[220px] object-contain"
+          />
         </div>
 
         <Card className="border-0 shadow-xl">
