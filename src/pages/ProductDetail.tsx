@@ -38,7 +38,7 @@ interface ProductImage {
   sort_order: number;
 }
 
-export default function ProductDetail() {
+export default function ProductDetail({ onBuyNow }: { onBuyNow?: (product: { id: string; name: string; price: number; image_url: string | null }) => void }) {
   const { subdomain, productId } = useParams<{ subdomain: string; productId: string }>();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
@@ -202,6 +202,11 @@ export default function ProductDetail() {
                 {outOfStock ? 'Pa stok' : 'Shto në shportë'}
               </Button>
             </div>
+            {onBuyNow && !outOfStock && (
+              <Button size="lg" variant="accent" className="w-full gap-2" onClick={() => onBuyNow({ id: product.id, name: product.name, price: product.price, image_url: product.image_url })}>
+                Blej tani
+              </Button>
+            )}
 
             {/* WhatsApp share */}
             <Button variant="outline" className="gap-2 mt-2" onClick={() => {

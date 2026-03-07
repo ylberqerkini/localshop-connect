@@ -14,9 +14,10 @@ interface ProductCardProps {
   stock_quantity: number | null;
   subdomain?: string;
   badge?: string | null;
+  onBuyNow?: (product: { id: string; name: string; price: number; image_url: string | null }) => void;
 }
 
-export function ProductCard({ id, name, price, description, image_url, stock_quantity, subdomain, badge }: ProductCardProps) {
+export function ProductCard({ id, name, price, description, image_url, stock_quantity, subdomain, badge, onBuyNow }: ProductCardProps) {
   const { addItem } = useCart();
   const outOfStock = stock_quantity !== null && stock_quantity <= 0;
   const lowStock = stock_quantity !== null && stock_quantity > 0 && stock_quantity <= 5;
@@ -59,15 +60,25 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
             <span className="text-lg font-bold text-foreground">€{price.toFixed(2)}</span>
             {lowStock && <p className="text-xs text-destructive">Vetëm {stock_quantity} copë!</p>}
           </div>
-          <Button
-            size="sm"
-            onClick={() => addItem({ id, name, price, image_url })}
-            disabled={outOfStock}
-            className="gap-1"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {outOfStock ? 'Pa stok' : 'Shto'}
-          </Button>
+          <div className="flex gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => addItem({ id, name, price, image_url })}
+              disabled={outOfStock}
+              className="gap-1"
+            >
+              <ShoppingCart className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onBuyNow?.({ id, name, price, image_url })}
+              disabled={outOfStock}
+              className="gap-1 flex-1"
+            >
+              {outOfStock ? 'Pa stok' : 'Blej tani'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
