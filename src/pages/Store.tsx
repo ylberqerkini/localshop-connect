@@ -58,6 +58,7 @@ function StoreContent() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { clearCart, addItem } = useCart();
 
   useEffect(() => {
     async function load() {
@@ -108,8 +109,6 @@ function StoreContent() {
       </div>
     );
   }
-
-  const { clearCart, addItem } = useCart();
 
   const handleBuyNow = (product: { id: string; name: string; price: number; image_url: string | null }) => {
     clearCart();
