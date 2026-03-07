@@ -14,16 +14,14 @@ interface Business {
   address: string | null;
   delivery_price: number;
   cash_on_delivery: boolean;
-  accepts_online_payments: boolean;
   iban: string | null;
-  bank_account_holder: string | null;
-  bank_name: string | null;
   email_notifications: boolean;
   is_featured: boolean;
   business_category: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  [key: string]: any;
 }
 
 interface BusinessContextType {

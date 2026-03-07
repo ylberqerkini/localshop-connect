@@ -58,6 +58,7 @@ function StoreContent() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { clearCart, addItem } = useCart();
 
   useEffect(() => {
     async function load() {
@@ -91,50 +92,10 @@ function StoreContent() {
     load();
   }, [subdomain]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (notFound || !business) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <StoreIcon className="h-16 w-16 text-muted-foreground" />
-        <h1 className="text-2xl font-bold text-foreground">Dyqani nuk u gjet</h1>
-        <p className="text-muted-foreground">Kjo faqe nuk ekziston ose nuk është aktive.</p>
-      </div>
-    );
-  }
-
-  const { clearCart, addItem } = useCart();
-
-  const handleBuyNow = (product: { id: string; name: string; price: number; image_url: string | null }) => {
-    clearCart();
-    addItem(product);
-    setCheckoutOpen(true);
-  };
-
-  // If viewing a specific product, render ProductDetail
-  if (productId) {
-    return (
-      <>
-        <ProductDetail onBuyNow={handleBuyNow} />
-        <CheckoutForm
-          open={checkoutOpen}
-          onClose={() => setCheckoutOpen(false)}
-          businessId={business.id}
-          deliveryFee={business.delivery_price ?? 0}
-        />
-      </>
-    );
-  }
-
   const hasSearch = searchQuery.trim().length > 0;
 
   const filtered = useMemo(() => {
+    if (!business) return [];
     const tokens = tokenize(searchQuery);
     const categoryMap = new Map(categories.map(category => [category.id, normalize(category.name)]));
 
@@ -176,7 +137,46 @@ function StoreContent() {
     });
 
     return ranked.map(item => item.product);
-  }, [products, categories, selectedCategory, onlyAvailable, hasSearch, searchQuery, sortBy]);
+  }, [products, categories, selectedCategory, onlyAvailable, hasSearch, searchQuery, sortBy, business]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (notFound || !business) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <StoreIcon className="h-16 w-16 text-muted-foreground" />
+        <h1 className="text-2xl font-bold text-foreground">Dyqani nuk u gjet</h1>
+        <p className="text-muted-foreground">Kjo faqe nuk ekziston ose nuk është aktive.</p>
+      </div>
+    );
+  }
+
+  const handleBuyNow = (product: { id: string; name: string; price: number; image_url: string | null }) => {
+    clearCart();
+    addItem(product);
+    setCheckoutOpen(true);
+  };
+
+  // If viewing a specific product, render ProductDetail
+  if (productId) {
+    return (
+      <>
+        <ProductDetail onBuyNow={handleBuyNow} />
+        <CheckoutForm
+          open={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          businessId={business.id}
+          deliveryFee={business.delivery_price ?? 0}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
