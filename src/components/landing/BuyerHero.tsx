@@ -99,11 +99,11 @@ const BuyerHero = () => {
       ];
 
       const { data: bizData } = bizIds.length > 0
-        ? await supabase.from("businesses").select("id, subdomain").in("id", bizIds)
+        ? await supabase.from("businesses").select("id, subdomain, name").in("id", bizIds)
         : { data: [] };
 
-      const bizMap: Record<string, string> = {};
-      (bizData || []).forEach((b) => (bizMap[b.id] = b.subdomain));
+      const bizMap: Record<string, { subdomain: string; name: string }> = {};
+      (bizData || []).forEach((b) => (bizMap[b.id] = { subdomain: b.subdomain, name: b.name }));
 
       const mapProduct = (p: any): ProductPreview => ({
         id: p.id,
