@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { Link } from 'react-router-dom';
 import { ProductBadge } from './ProductBadge';
 import { WishlistButton } from './WishlistButton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductCardProps {
   id: string;
@@ -21,6 +23,7 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
   const { addItem } = useCart();
   const outOfStock = stock_quantity !== null && stock_quantity <= 0;
   const lowStock = stock_quantity !== null && stock_quantity > 0 && stock_quantity <= 5;
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const cardContent = (
     <div className="aspect-square bg-muted overflow-hidden relative">
@@ -31,7 +34,16 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
         </span>
       )}
       {image_url ? (
-        <img src={image_url} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <>
+          {!imgLoaded && <Skeleton className="absolute inset-0" />}
+          <img
+            src={image_url}
+            alt={name}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
+          />
+        </>
       ) : (
         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
           <ShoppingCart className="h-12 w-12 opacity-20" />
@@ -41,9 +53,9 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
   );
 
   return (
-    <div className="group rounded-2xl border border-border/70 bg-card overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+    <article className="group rounded-2xl border border-border/70 bg-card overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       {subdomain ? (
-        <Link to={`/store/${subdomain}/product/${id}`}>
+        <Link to={`/store/${subdomain}/product/${id}`} aria-label={`Shiko ${name}`}>
           {cardContent}
         </Link>
       ) : (
@@ -67,6 +79,7 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
               onClick={() => addItem({ id, name, price, image_url })}
               disabled={outOfStock}
               className="gap-1"
+              aria-label={`Shto ${name} në shportë`}
             >
               <ShoppingCart className="h-4 w-4" />
             </Button>
@@ -81,6 +94,6 @@ export function ProductCard({ id, name, price, description, image_url, stock_qua
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
