@@ -183,7 +183,7 @@ function StoreContent() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md" role="banner">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             {business.logo_url ? (
               <img src={business.logo_url} alt={business.name} className="h-8 w-8 rounded-lg object-cover" />
             ) : (
@@ -192,7 +192,7 @@ function StoreContent() {
               </div>
             )}
             <h1 className="font-bold text-lg text-foreground">{business.name}</h1>
-          </div>
+          </a>
           <CartDrawer deliveryFee={business.delivery_price ?? 0} onCheckout={() => setCheckoutOpen(true)} />
         </div>
       </header>
