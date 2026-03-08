@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { BusinessProvider, useBusiness } from "@/hooks/useBusiness";
 import { useAdmin } from "@/hooks/useAdmin";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -61,6 +62,7 @@ const DashboardWrapper = ({ children }: { children: React.ReactNode }) => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
     <AuthProvider>
       <BusinessProvider>
         <TooltipProvider>
@@ -101,6 +103,7 @@ const App = () => (
         </TooltipProvider>
       </BusinessProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

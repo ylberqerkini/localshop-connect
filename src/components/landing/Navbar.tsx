@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Menu, X, User } from "lucide-react";
+import { ArrowLeftRight, Menu, X, User, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import eblejLogo from "@/assets/eblej.png";
 
 interface NavbarProps {
@@ -14,6 +15,7 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
   const isBusiness = view === "business";
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const closeMenu = () => setMobileOpen(false);
 
@@ -51,6 +53,9 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Ndrysho temën">
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             {onViewChange && (
               <Button
                 variant="outline"
@@ -95,6 +100,9 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
 
           {/* Mobile: toggle + hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Ndrysho temën" className="h-8 w-8">
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             {onViewChange && (
               <Button
                 variant="outline"
