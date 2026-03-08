@@ -90,7 +90,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
           delivery_fee: effectiveDelivery,
           platform_fee: platformFee,
           total,
-          city: values.city,
+          city: `${values.city}, ${values.country}`,
           notes: values.notes || null,
           status: 'pending',
           coupon_code: appliedCoupon?.code || null,
