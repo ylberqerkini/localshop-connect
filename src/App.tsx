@@ -103,6 +103,7 @@ const App = () => (
         </TooltipProvider>
       </BusinessProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

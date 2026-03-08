@@ -15,6 +15,7 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
   const isBusiness = view === "business";
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const closeMenu = () => setMobileOpen(false);
 
