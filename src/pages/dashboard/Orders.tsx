@@ -430,10 +430,37 @@ ${o.notes ? `\n📝 ${o.notes}` : ''}`;
             Menaxho porositë e biznesit tënd
           </p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Eksporto
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Eksporto
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={exportAsPdf} className="gap-3 cursor-pointer">
+              <FileText className="h-4 w-4 text-red-500" />
+              <div>
+                <div className="font-medium">PDF</div>
+                <div className="text-xs text-muted-foreground">Raport për printim</div>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportAsExcel} className="gap-3 cursor-pointer">
+              <FileSpreadsheet className="h-4 w-4 text-green-600" />
+              <div>
+                <div className="font-medium">Excel (CSV)</div>
+                <div className="text-xs text-muted-foreground">Spreadsheet format</div>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportAsNotes} className="gap-3 cursor-pointer">
+              <StickyNote className="h-4 w-4 text-yellow-500" />
+              <div>
+                <div className="font-medium">Shënime (TXT)</div>
+                <div className="text-xs text-muted-foreground">Tekst i thjeshtë</div>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Filters */}
