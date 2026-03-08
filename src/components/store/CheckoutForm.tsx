@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,8 +18,9 @@ import { toast } from '@/hooks/use-toast';
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2, 'Emri duhet të ketë të paktën 2 karaktere').max(100),
   phone: z.string().trim().min(9, 'Numri i telefonit nuk është i vlefshëm').max(20),
-  address: z.string().trim().min(5, 'Adresa duhet të ketë të paktën 5 karaktere').max(300),
+  country: z.string().min(1, 'Zgjidh shtetin'),
   city: z.string().trim().min(2, 'Qyteti duhet të ketë të paktën 2 karaktere').max(100),
+  address: z.string().trim().min(5, 'Adresa duhet të ketë të paktën 5 karaktere').max(300),
   notes: z.string().max(500).optional(),
 });
 
@@ -47,7 +49,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { full_name: '', phone: '', address: '', city: '', notes: '' },
+    defaultValues: { full_name: '', phone: '', country: '', city: '', address: '', notes: '' },
   });
 
   // Calculate discount
@@ -88,7 +90,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
           delivery_fee: effectiveDelivery,
           platform_fee: platformFee,
           total,
-          city: values.city,
+          city: `${values.city}, ${values.country}`,
           notes: values.notes || null,
           status: 'pending',
           coupon_code: appliedCoupon?.code || null,
@@ -186,6 +188,23 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
               <FormItem>
                 <FormLabel>Telefoni</FormLabel>
                 <FormControl><Input placeholder="+355 6X XXX XXXX" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="country" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Shteti</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Zgjidh shtetin" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Kosovë">Kosovë</SelectItem>
+                    <SelectItem value="Shqipëri">Shqipëri</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )} />
