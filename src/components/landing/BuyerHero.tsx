@@ -434,7 +434,10 @@ const ProductMiniCard = memo(function ProductMiniCard({ product }: { product: Pr
         <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
           {product.name}
         </h3>
-        <p className="text-base font-bold text-foreground mt-1.5">
+        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+          {product.business_name}
+        </p>
+        <p className="text-base font-bold text-foreground mt-1">
           €{product.price.toFixed(2)}
         </p>
       </div>
