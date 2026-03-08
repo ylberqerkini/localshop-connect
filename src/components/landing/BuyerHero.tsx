@@ -69,7 +69,6 @@ const BuyerHero = () => {
   const [dealProducts, setDealProducts] = useState<ProductPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     async function loadProducts() {
