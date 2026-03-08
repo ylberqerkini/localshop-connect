@@ -12,6 +12,7 @@ import { useCart } from '@/hooks/useCart';
 import { CouponInput } from './CouponInput';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2, 'Emri duhet të ketë të paktën 2 karaktere').max(100),
@@ -150,9 +151,11 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       clearCart();
       setAppliedCoupon(null);
       onClose();
+      toast({ title: 'Porosia u dërgua me sukses! ✅', description: `Numri i porosisë: ${orderNum}` });
       navigate(`/store/${subdomain}/order/${orderNum}`);
     } catch (err) {
       console.error('Checkout error:', err);
+      toast({ title: 'Gabim gjatë dërgimit', description: 'Porosia nuk u dërgua. Provo përsëri.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
