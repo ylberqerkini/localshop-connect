@@ -49,7 +49,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { full_name: '', phone: '', address: '', city: '', notes: '' },
+    defaultValues: { full_name: '', phone: '', country: '', city: '', address: '', notes: '' },
   });
 
   // Calculate discount
