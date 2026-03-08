@@ -181,7 +181,7 @@ function StoreContent() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md" role="banner">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
             {business.logo_url ? (
@@ -316,7 +316,7 @@ function StoreContent() {
 
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>Mundësuar nga <span className="font-semibold text-primary">eblej</span></p>
+        <p>Mundësuar nga <a href="https://eblej.com" className="font-semibold text-primary hover:underline">eblej</a></p>
       </footer>
 
       <CheckoutForm

@@ -1,20 +1,21 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import eblejLogo from "@/assets/eblej.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-foreground text-background py-16">
+    <footer className="bg-foreground text-background py-16" role="contentinfo">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
+            <Link to="/" className="flex items-center gap-2 mb-4">
               <img
                 src={eblejLogo}
-                alt="eblej"
+                alt="eblej - Kthehu në faqen kryesore"
                 className="h-10 sm:h-12 w-auto max-w-[200px] object-contain"
               />
-            </div>
+            </Link>
             <p className="text-muted-foreground text-sm mb-6">
               Platforma e shitjeve online për bizneset lokale në Kosovë dhe Shqipëri.
             </p>
