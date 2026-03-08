@@ -151,9 +151,11 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
       clearCart();
       setAppliedCoupon(null);
       onClose();
+      toast({ title: 'Porosia u dërgua me sukses! ✅', description: `Numri i porosisë: ${orderNum}` });
       navigate(`/store/${subdomain}/order/${orderNum}`);
     } catch (err) {
       console.error('Checkout error:', err);
+      toast({ title: 'Gabim gjatë dërgimit', description: 'Porosia nuk u dërgua. Provo përsëri.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
