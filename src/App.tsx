@@ -31,6 +31,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import Marketplace from "./pages/Marketplace";
 import SellerProfile from "./pages/SellerProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Careers from "./pages/Careers";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/careers" element={<Careers />} />
               <Route path="/seller/:subdomain" element={<SellerProfile />} />
               <Route path="/account" element={<ProtectedRoute><BuyerAccount /></ProtectedRoute>} />
 
