@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Slider } from '@/components/ui/slider';
 import { usePlatformCategories, buildCategoryTree } from '@/hooks/usePlatformCategories';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -78,7 +79,8 @@ export default function Marketplace() {
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [searchCategory, setSearchCategory] = useState<string>('all');
   const [searchSort, setSearchSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest'>('newest');
-
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [maxPrice, setMaxPrice] = useState(1000);
   const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
 
   const isSearching = search.trim().length > 0;
@@ -133,6 +135,9 @@ export default function Marketplace() {
           _created_at: p.created_at,
         }));
       setAllProducts(searchableProducts as any);
+      const max = Math.ceil(Math.max(...searchableProducts.map(p => p.price), 100));
+      setMaxPrice(max);
+      setPriceRange([0, max]);
       setLoading(false);
     }
     load();
@@ -165,6 +170,9 @@ export default function Marketplace() {
         return slugs.some((s: string) => activeCategorySlugs.includes(s));
       });
     }
+
+    // Filter by price range
+    products = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
     // Filter by search category
     if (searchCategory !== 'all') {
@@ -211,7 +219,7 @@ export default function Marketplace() {
     else products.sort((a, b) => ((b as any)._created_at || '').localeCompare((a as any)._created_at || ''));
 
     return products;
-  }, [allProducts, activeCategorySlugs, searchCategory, search, isSearching, searchSort]);
+  }, [allProducts, activeCategorySlugs, searchCategory, search, isSearching, searchSort, priceRange]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -258,6 +266,24 @@ export default function Marketplace() {
                   <SelectItem value="price-desc">Çmimi: i lartë në të ulët</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Price Range Slider */}
+            <div className="max-w-3xl mx-auto mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">Çmimi</span>
+                <span className="text-sm text-muted-foreground">
+                  €{priceRange[0]} – €{priceRange[1]}
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={maxPrice}
+                step={1}
+                value={priceRange}
+                onValueChange={(val) => setPriceRange(val as [number, number])}
+                className="w-full"
+              />
             </div>
 
             {roots.length > 0 && (
