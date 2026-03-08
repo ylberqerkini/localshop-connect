@@ -10,7 +10,6 @@ import { usePlatformCategories, buildCategoryTree } from "@/hooks/usePlatformCat
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
 import heroSlide1 from "@/assets/hero-slide-1.jpg";
 import heroSlide2 from "@/assets/hero-slide-2.jpg";
 import heroSlide3 from "@/assets/hero-slide-3.jpg";
