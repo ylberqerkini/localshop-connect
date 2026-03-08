@@ -21,24 +21,24 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Links */}
+          {/* Buyer Links */}
           <div>
-            <h4 className="font-semibold mb-4">Produkti</h4>
+            <h4 className="font-semibold mb-4">Për blerës</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-background transition-colors">Karakteristikat</a></li>
-              <li><a href="#cmimet" className="hover:text-background transition-colors">Çmimet</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Integrimi</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">FAQ</a></li>
+              <li><Link to="/marketplace" className="hover:text-background transition-colors">Eksploro produktet</Link></li>
+              <li><Link to="/" className="hover:text-background transition-colors">Kryefaqja</Link></li>
+              <li><Link to="/auth?role=buyer" className="hover:text-background transition-colors">Krijo llogari</Link></li>
             </ul>
           </div>
 
+          {/* Business Links */}
           <div>
-            <h4 className="font-semibold mb-4">Kompania</h4>
+            <h4 className="font-semibold mb-4">Për biznese</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-background transition-colors">Rreth nesh</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Karriera</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Press</a></li>
+              <li><Link to="/?view=business" className="hover:text-background transition-colors">Si funksionon</Link></li>
+              <li><Link to="/?view=business#cmimet" className="hover:text-background transition-colors">Çmimet</Link></li>
+              <li><Link to="/auth?mode=signup" className="hover:text-background transition-colors">Regjistro biznesin</Link></li>
+              <li><Link to="/auth" className="hover:text-background transition-colors">Hyr në panel</Link></li>
             </ul>
           </div>
 
@@ -69,8 +69,8 @@ const Footer = () => {
               © {new Date().getFullYear()} eblej.com. Të gjitha të drejtat e rezervuara.
             </p>
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-background transition-colors">Politika e privatësisë</a>
-              <a href="#" className="hover:text-background transition-colors">Kushtet e shërbimit</a>
+              <Link to="/privacy" className="hover:text-background transition-colors">Politika e privatësisë</Link>
+              <Link to="/terms" className="hover:text-background transition-colors">Kushtet e shërbimit</Link>
             </div>
           </div>
         </div>
