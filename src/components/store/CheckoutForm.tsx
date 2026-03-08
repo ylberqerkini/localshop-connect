@@ -214,13 +214,36 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
               </FormItem>
             )} />
             <div className="grid grid-cols-2 gap-3">
-              <FormField control={form.control} name="city" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Qyteti</FormLabel>
-                  <FormControl><Input placeholder="Tiranë" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField control={form.control} name="city" render={({ field }) => {
+                const country = form.watch('country');
+                const cities = country === 'Kosovë'
+                  ? ['Prishtinë', 'Prizren', 'Pejë', 'Mitrovicë', 'Gjilan', 'Ferizaj', 'Gjakovë', 'Podujevë', 'Vushtrri', 'Suharekë', 'Rahovec', 'Drenas', 'Lipjan', 'Malishevë', 'Kamenicë', 'Viti', 'Deçan', 'Istog', 'Klinë', 'Skenderaj', 'Dragash', 'Fushë Kosovë', 'Kaçanik', 'Shtime', 'Obiliq']
+                  : country === 'Shqipëri'
+                  ? ['Tiranë', 'Durrës', 'Vlorë', 'Elbasan', 'Shkodër', 'Fier', 'Korçë', 'Berat', 'Lushnjë', 'Pogradec', 'Kavajë', 'Laç', 'Gjirokastër', 'Sarandë', 'Kukës', 'Lezhë', 'Peshkopi', 'Burrel', 'Përmet', 'Tepelenë']
+                  : [];
+                return (
+                  <FormItem>
+                    <FormLabel>Qyteti</FormLabel>
+                    {cities.length > 0 ? (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Zgjidh qytetin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {cities.map(city => (
+                            <SelectItem key={city} value={city}>{city}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <FormControl><Input placeholder="Zgjidh shtetin fillimisht" {...field} /></FormControl>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                );
+              }} />
               <FormField control={form.control} name="address" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Adresa</FormLabel>
