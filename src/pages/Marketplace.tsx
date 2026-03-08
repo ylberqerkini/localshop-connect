@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Slider } from '@/components/ui/slider';
 import { usePlatformCategories, buildCategoryTree } from '@/hooks/usePlatformCategories';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
