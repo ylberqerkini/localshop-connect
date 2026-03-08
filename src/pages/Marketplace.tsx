@@ -171,6 +171,9 @@ export default function Marketplace() {
       });
     }
 
+    // Filter by price range
+    products = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
     // Filter by search category
     if (searchCategory !== 'all') {
       products = products.filter(p => p.categoryNames.includes(searchCategory));
