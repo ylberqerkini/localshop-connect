@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBusiness } from '@/hooks/useBusiness';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Filter, Download, Eye, Clock, CheckCircle, Truck, Package, XCircle, Printer, Edit, Loader2 } from 'lucide-react';
+import { Search, Filter, Download, Eye, Clock, CheckCircle, Truck, Package, XCircle, Printer, Edit, Loader2, FileText, FileSpreadsheet, StickyNote } from 'lucide-react';
 import { format } from 'date-fns';
 import { sq } from 'date-fns/locale';
 
