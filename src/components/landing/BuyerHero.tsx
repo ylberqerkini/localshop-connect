@@ -9,9 +9,6 @@ import {
 import { usePlatformCategories, buildCategoryTree } from "@/hooks/usePlatformCategories";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { supabase } from "@/integrations/supabase/client";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import heroSlide1 from "@/assets/hero-slide-1.jpg";
 import heroSlide2 from "@/assets/hero-slide-2.jpg";
@@ -71,7 +68,6 @@ const BuyerHero = () => {
   const [featuredProducts, setFeaturedProducts] = useState<ProductPreview[]>([]);
   const [dealProducts, setDealProducts] = useState<ProductPreview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [api, setApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -124,12 +120,13 @@ const BuyerHero = () => {
     loadProducts();
   }, []);
 
+  // Auto-advance slides
   useEffect(() => {
-    if (!api) return;
-    const onSelect = () => setCurrentSlide(api.selectedScrollSnap());
-    api.on("select", onSelect);
-    return () => { api.off("select", onSelect); };
-  }, [api]);
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -165,41 +162,43 @@ const BuyerHero = () => {
         </div>
       </nav>
 
-      {/* Hero Carousel */}
+      {/* Hero Carousel - Fade transition */}
       <section className="bg-card" aria-label="Oferta kryesore">
         <div className="container mx-auto px-4 py-6">
-          <Carousel
-            setApi={setApi}
-            opts={{ loop: true }}
-            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
-            className="rounded-2xl overflow-hidden"
-          >
-            <CarouselContent>
-              {heroSlides.map((slide, i) => (
-                <CarouselItem key={i}>
-                  <div
-                    className="rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden"
-                  >
-                    {/* Background image */}
-                    <img
-                      src={slide.image}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading={i === 0 ? "eager" : "lazy"}
-                    />
-                    {/* Gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${slide.overlay}`} />
-                    <div className="absolute right-8 bottom-8 opacity-10 hidden sm:block">
-                      <slide.icon className="w-32 h-32 text-white" />
-                    </div>
+          <div className="relative rounded-2xl overflow-hidden min-h-[240px] sm:min-h-[320px]">
+            {heroSlides.map((slide, i) => (
+              <div
+                key={i}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  currentSlide === i ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
+              >
+                <div className="rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden">
+                  <img
+                    src={slide.image}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading={i === 0 ? "eager" : "lazy"}
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${slide.overlay}`} />
+                  <div className="absolute right-8 bottom-8 opacity-10 hidden sm:block">
+                    <slide.icon className="w-32 h-32 text-white" />
+                  </div>
 
-                    <div className="relative max-w-lg">
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-3 leading-tight">
-                        {slide.title}
-                      </h2>
-                      <p className="text-white/80 text-sm sm:text-base mb-6 max-w-md">
-                        {slide.subtitle}
-                      </p>
+                  <div className="relative max-w-lg">
+                    <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-3 leading-tight transition-all duration-500 delay-200 ${
+                      currentSlide === i ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                    }`}>
+                      {slide.title}
+                    </h2>
+                    <p className={`text-white/80 text-sm sm:text-base mb-6 max-w-md transition-all duration-500 delay-300 ${
+                      currentSlide === i ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                    }`}>
+                      {slide.subtitle}
+                    </p>
+                    <div className={`transition-all duration-500 delay-[400ms] ${
+                      currentSlide === i ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                    }`}>
                       <Button
                         onClick={() => navigate("/marketplace")}
                         className="bg-white text-foreground hover:bg-white/90 rounded-full px-6 font-semibold shadow-lg"
@@ -209,9 +208,9 @@ const BuyerHero = () => {
                       </Button>
                     </div>
                   </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+                </div>
+              </div>
+            ))}
 
             {/* Dots */}
             <div className="flex justify-center gap-2 mt-4" role="tablist" aria-label="Slides">
@@ -221,7 +220,7 @@ const BuyerHero = () => {
                   role="tab"
                   aria-selected={currentSlide === i}
                   aria-label={`Slide ${i + 1}`}
-                  onClick={() => api?.scrollTo(i)}
+                  onClick={() => setCurrentSlide(i)}
                   className={`h-2.5 rounded-full transition-all duration-300 ${
                     currentSlide === i
                       ? "bg-primary w-8"
@@ -230,7 +229,7 @@ const BuyerHero = () => {
                 />
               ))}
             </div>
-          </Carousel>
+          </div>
         </div>
       </section>
 
