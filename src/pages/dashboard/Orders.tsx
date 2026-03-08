@@ -285,6 +285,131 @@ export default function Orders() {
     win.document.close();
   };
 
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAsExcel = () => {
+    const headers = ['Nr. Porosisë', 'Klienti', 'Telefoni', 'Adresa', 'Qyteti', 'Statusi', 'Produktet', 'Nëntotali', 'Transport', 'Zbritje', 'Totali', 'Data', 'Shënime'];
+    const rows = filteredOrders.map(o => [
+      o.order_number,
+      o.customer?.full_name || '',
+      o.customer?.phone || '',
+      o.customer?.address || '',
+      o.city || '',
+      statusConfig[o.status].label,
+      o.items.map(i => `${i.quantity}x ${i.product_name}`).join('; '),
+      Number(o.subtotal).toFixed(2),
+      Number(o.delivery_fee || 0).toFixed(2),
+      Number(o.discount_amount || 0).toFixed(2),
+      Number(o.total).toFixed(2),
+      format(new Date(o.created_at), 'dd/MM/yyyy HH:mm'),
+      o.notes || '',
+    ]);
+    const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    downloadFile(csv, `porositë-${format(new Date(), 'yyyy-MM-dd')}.csv`, 'text/csv;charset=utf-8');
+    toast({ title: 'Sukses', description: 'Excel (CSV) u eksportua me sukses' });
+  };
+
+  const exportAsNotes = () => {
+    const text = filteredOrders.map(o => {
+      const items = o.items.map(i => `  • ${i.quantity}x ${i.product_name} — €${Number(i.total).toFixed(2)}`).join('\n');
+      return `═══════════════════════════════════════
+📦 Porosia #${o.order_number}
+📅 ${format(new Date(o.created_at), 'dd MMMM yyyy, HH:mm', { locale: sq })}
+📊 Status: ${statusConfig[o.status].label}
+───────────────────────────────────────
+👤 ${o.customer?.full_name || 'N/A'}
+📞 ${o.customer?.phone || ''}
+📍 ${o.customer?.address || ''}${o.city ? ', ' + o.city : ''}
+───────────────────────────────────────
+${items}
+───────────────────────────────────────
+  Nëntotali: €${Number(o.subtotal).toFixed(2)}
+  Transport: €${Number(o.delivery_fee || 0).toFixed(2)}
+  Zbritje:   €${Number(o.discount_amount || 0).toFixed(2)}
+  TOTALI:    €${Number(o.total).toFixed(2)}
+${o.notes ? `\n📝 ${o.notes}` : ''}`;
+    }).join('\n\n');
+    
+    downloadFile(text, `porositë-${format(new Date(), 'yyyy-MM-dd')}.txt`, 'text/plain;charset=utf-8');
+    toast({ title: 'Sukses', description: 'Shënimet u eksportuan me sukses' });
+  };
+
+  const exportAsPdf = () => {
+    const rows = filteredOrders.map(o => `
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:500;">#${o.order_number}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">
+          <div style="font-weight:500;">${o.customer?.full_name || 'N/A'}</div>
+          <div style="font-size:12px;color:#6b7280;">${o.customer?.phone || ''}</div>
+        </td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${o.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ')}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">
+          <span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:500;${
+            o.status === 'delivered' ? 'background:#dcfce7;color:#166534;' :
+            o.status === 'cancelled' ? 'background:#fee2e2;color:#991b1b;' :
+            o.status === 'shipped' ? 'background:#ede9fe;color:#5b21b6;' :
+            o.status === 'confirmed' ? 'background:#dbeafe;color:#1e40af;' :
+            'background:#fef9c3;color:#854d0e;'
+          }">${statusConfig[o.status].label}</span>
+        </td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">€${Number(o.total).toFixed(2)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${format(new Date(o.created_at), 'dd MMM yyyy')}</td>
+      </tr>
+    `).join('');
+
+    const totalSum = filteredOrders.reduce((s, o) => s + Number(o.total), 0);
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Raporti i Porosive</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; color:#111827; padding:40px; max-width:1100px; margin:auto; }
+  .header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; padding-bottom:20px; border-bottom:3px solid #111827; }
+  .header h1 { font-size:26px; letter-spacing:-0.5px; }
+  .header .sub { color:#6b7280; font-size:14px; margin-top:4px; }
+  .stats { display:flex; gap:24px; margin-bottom:28px; }
+  .stat { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px 20px; flex:1; }
+  .stat .label { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#6b7280; }
+  .stat .value { font-size:22px; font-weight:700; margin-top:4px; }
+  table { width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+  th { text-align:left; padding:12px; background:#f9fafb; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:#6b7280; border-bottom:2px solid #e5e7eb; }
+  .footer { margin-top:32px; text-align:center; font-size:12px; color:#9ca3af; }
+  @media print { body { padding:20px; } }
+</style></head><body>
+  <div class="header">
+    <div>
+      <h1>📊 Raporti i Porosive</h1>
+      <div class="sub">${business?.name || ''} • Gjeneruar më ${format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: sq })}</div>
+    </div>
+    <div style="text-align:right;font-size:13px;color:#6b7280;">
+      ${statusFilter !== 'all' ? `Filter: ${statusConfig[statusFilter as OrderStatus]?.label || statusFilter}` : 'Të gjitha porositë'}
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="label">Porosi gjithsej</div><div class="value">${filteredOrders.length}</div></div>
+    <div class="stat"><div class="label">Totali i shitjeve</div><div class="value">€${totalSum.toFixed(2)}</div></div>
+    <div class="stat"><div class="label">Mesatarja</div><div class="value">€${filteredOrders.length ? (totalSum / filteredOrders.length).toFixed(2) : '0.00'}</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Nr.</th><th>Klienti</th><th>Produktet</th><th>Statusi</th><th>Totali</th><th>Data</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer"><p>${business?.name || ''} ${business?.phone ? '• ' + business.phone : ''} ${business?.email ? '• ' + business.email : ''}</p></div>
+  <script>window.onload=function(){window.print();}</script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
+    toast({ title: 'Sukses', description: 'PDF u hap për printim' });
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
