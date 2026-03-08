@@ -13,6 +13,9 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import Autoplay from "embla-carousel-autoplay";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
+import heroSlide1 from "@/assets/hero-slide-1.jpg";
+import heroSlide2 from "@/assets/hero-slide-2.jpg";
+import heroSlide3 from "@/assets/hero-slide-3.jpg";
 
 interface ProductPreview {
   id: string;
@@ -28,21 +31,24 @@ const heroSlides = [
     title: "Transport falas. Blerje globale.",
     subtitle: "Bli online nga dyqanet lokale me transport falas në shumë artikuj.",
     cta: "Bli tani",
-    bg: "bg-gradient-to-br from-primary via-primary/90 to-primary/70",
+    image: heroSlide1,
+    overlay: "from-primary/80 via-primary/60 to-primary/40",
     icon: ShoppingBag,
   },
   {
     title: "Ofertat e ditës",
     subtitle: "Zbulo produkte me çmime të ulëta çdo ditë.",
     cta: "Shiko ofertat",
-    bg: "bg-gradient-to-br from-accent via-accent/90 to-accent/70",
+    image: heroSlide2,
+    overlay: "from-accent/80 via-accent/60 to-accent/40",
     icon: Sparkles,
   },
   {
     title: "Teknologji e re",
     subtitle: "Laptopë, telefona, aksesorë dhe më shumë nga dyqanet lokale.",
     cta: "Eksploro",
-    bg: "bg-gradient-to-br from-success via-success/90 to-success/70",
+    image: heroSlide3,
+    overlay: "from-success/80 via-success/60 to-success/40",
     icon: TrendingUp,
   },
 ];
@@ -172,11 +178,17 @@ const BuyerHero = () => {
               {heroSlides.map((slide, i) => (
                 <CarouselItem key={i}>
                   <div
-                    className={`${slide.bg} rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden`}
+                    className="rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden"
                   >
-                    {/* Decorative */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
-                    <div className="absolute bottom-0 right-1/3 w-40 h-40 bg-white/5 rounded-full translate-y-1/2" />
+                    {/* Background image */}
+                    <img
+                      src={slide.image}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                    {/* Gradient overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${slide.overlay}`} />
                     <div className="absolute right-8 bottom-8 opacity-10 hidden sm:block">
                       <slide.icon className="w-32 h-32 text-white" />
                     </div>
