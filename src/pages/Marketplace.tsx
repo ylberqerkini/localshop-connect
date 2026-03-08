@@ -135,6 +135,9 @@ export default function Marketplace() {
           _created_at: p.created_at,
         }));
       setAllProducts(searchableProducts as any);
+      const max = Math.ceil(Math.max(...searchableProducts.map(p => p.price), 100));
+      setMaxPrice(max);
+      setPriceRange([0, max]);
       setLoading(false);
     }
     load();
