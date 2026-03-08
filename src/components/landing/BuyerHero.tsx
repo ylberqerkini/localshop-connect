@@ -223,7 +223,7 @@ const BuyerHero = () => {
                   role="tab"
                   aria-selected={currentSlide === i}
                   aria-label={`Slide ${i + 1}`}
-                  onClick={() => api?.scrollTo(i)}
+                  onClick={() => setCurrentSlide(i)}
                   className={`h-2.5 rounded-full transition-all duration-300 ${
                     currentSlide === i
                       ? "bg-primary w-8"
@@ -232,7 +232,7 @@ const BuyerHero = () => {
                 />
               ))}
             </div>
-          </Carousel>
+          </div>
         </div>
       </section>
 
