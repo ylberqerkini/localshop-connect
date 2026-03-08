@@ -21,6 +21,7 @@ interface ProductPreview {
   image_url: string | null;
   badge: string | null;
   business_subdomain: string;
+  business_name: string;
 }
 
 const heroSlides = [
