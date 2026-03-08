@@ -21,6 +21,7 @@ interface ProductPreview {
   image_url: string | null;
   badge: string | null;
   business_subdomain: string;
+  business_name: string;
 }
 
 const heroSlides = [
@@ -98,11 +99,11 @@ const BuyerHero = () => {
       ];
 
       const { data: bizData } = bizIds.length > 0
-        ? await supabase.from("businesses").select("id, subdomain").in("id", bizIds)
+        ? await supabase.from("businesses").select("id, subdomain, name").in("id", bizIds)
         : { data: [] };
 
-      const bizMap: Record<string, string> = {};
-      (bizData || []).forEach((b) => (bizMap[b.id] = b.subdomain));
+      const bizMap: Record<string, { subdomain: string; name: string }> = {};
+      (bizData || []).forEach((b) => (bizMap[b.id] = { subdomain: b.subdomain, name: b.name }));
 
       const mapProduct = (p: any): ProductPreview => ({
         id: p.id,
@@ -110,7 +111,8 @@ const BuyerHero = () => {
         price: p.price,
         image_url: p.image_url,
         badge: p.badge,
-        business_subdomain: bizMap[p.business_id] || "",
+        business_subdomain: bizMap[p.business_id]?.subdomain || "",
+        business_name: bizMap[p.business_id]?.name || "",
       });
 
       setFeaturedProducts((featuredRes.data || []).map(mapProduct));
@@ -434,7 +436,10 @@ const ProductMiniCard = memo(function ProductMiniCard({ product }: { product: Pr
         <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
           {product.name}
         </h3>
-        <p className="text-base font-bold text-foreground mt-1.5">
+        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+          {product.business_name}
+        </p>
+        <p className="text-base font-bold text-foreground mt-1">
           €{product.price.toFixed(2)}
         </p>
       </div>
