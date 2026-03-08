@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Menu, X, User } from "lucide-react";
+import { ArrowLeftRight, Menu, X, User, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import eblejLogo from "@/assets/eblej.png";
 
 interface NavbarProps {
