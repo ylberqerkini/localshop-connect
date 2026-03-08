@@ -79,7 +79,8 @@ export default function Marketplace() {
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category') || null);
   const [searchCategory, setSearchCategory] = useState<string>('all');
   const [searchSort, setSearchSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest'>('newest');
-
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [maxPrice, setMaxPrice] = useState(1000);
   const { roots, children } = useMemo(() => buildCategoryTree(platformCategories), [platformCategories]);
 
   const isSearching = search.trim().length > 0;
