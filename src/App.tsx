@@ -31,6 +31,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import Marketplace from "./pages/Marketplace";
 import SellerProfile from "./pages/SellerProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Careers from "./pages/Careers";
 
 const queryClient = new QueryClient();
 

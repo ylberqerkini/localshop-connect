@@ -39,6 +39,7 @@ const Footer = () => {
               <li><Link to="/?view=business#cmimet" className="hover:text-background transition-colors">Çmimet</Link></li>
               <li><Link to="/auth?mode=signup" className="hover:text-background transition-colors">Regjistro biznesin</Link></li>
               <li><Link to="/auth" className="hover:text-background transition-colors">Hyr në panel</Link></li>
+              <li><Link to="/careers" className="hover:text-background transition-colors flex items-center gap-1.5">Mundësi punësimi</Link></li>
             </ul>
           </div>
 
