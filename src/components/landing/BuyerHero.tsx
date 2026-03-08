@@ -121,12 +121,13 @@ const BuyerHero = () => {
     loadProducts();
   }, []);
 
+  // Auto-advance slides
   useEffect(() => {
-    if (!api) return;
-    const onSelect = () => setCurrentSlide(api.selectedScrollSnap());
-    api.on("select", onSelect);
-    return () => { api.off("select", onSelect); };
-  }, [api]);
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
