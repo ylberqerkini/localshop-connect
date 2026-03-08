@@ -316,7 +316,7 @@ function StoreContent() {
 
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>Mundësuar nga <span className="font-semibold text-primary">eblej</span></p>
+        <p>Mundësuar nga <a href="https://eblej.com" className="font-semibold text-primary hover:underline">eblej</a></p>
       </footer>
 
       <CheckoutForm
