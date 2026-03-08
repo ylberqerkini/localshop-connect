@@ -191,6 +191,23 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="country" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Shteti</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Zgjidh shtetin" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Kosovë">Kosovë</SelectItem>
+                    <SelectItem value="Shqipëri">Shqipëri</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="city" render={({ field }) => (
                 <FormItem>
