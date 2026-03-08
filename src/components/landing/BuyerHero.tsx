@@ -9,9 +9,7 @@ import {
 import { usePlatformCategories, buildCategoryTree } from "@/hooks/usePlatformCategories";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { supabase } from "@/integrations/supabase/client";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import type { CarouselApi } from "@/components/ui/carousel";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import heroSlide1 from "@/assets/hero-slide-1.jpg";
 import heroSlide2 from "@/assets/hero-slide-2.jpg";
