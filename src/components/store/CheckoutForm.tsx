@@ -18,8 +18,9 @@ import { toast } from '@/hooks/use-toast';
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2, 'Emri duhet të ketë të paktën 2 karaktere').max(100),
   phone: z.string().trim().min(9, 'Numri i telefonit nuk është i vlefshëm').max(20),
-  address: z.string().trim().min(5, 'Adresa duhet të ketë të paktën 5 karaktere').max(300),
+  country: z.string().min(1, 'Zgjidh shtetin'),
   city: z.string().trim().min(2, 'Qyteti duhet të ketë të paktën 2 karaktere').max(100),
+  address: z.string().trim().min(5, 'Adresa duhet të ketë të paktën 5 karaktere').max(300),
   notes: z.string().max(500).optional(),
 });
 
