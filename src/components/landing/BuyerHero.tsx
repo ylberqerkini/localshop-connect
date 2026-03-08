@@ -178,11 +178,17 @@ const BuyerHero = () => {
               {heroSlides.map((slide, i) => (
                 <CarouselItem key={i}>
                   <div
-                    className={`${slide.bg} rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden`}
+                    className="rounded-2xl p-8 sm:p-12 lg:p-16 flex flex-col justify-center min-h-[240px] sm:min-h-[320px] relative overflow-hidden"
                   >
-                    {/* Decorative */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
-                    <div className="absolute bottom-0 right-1/3 w-40 h-40 bg-white/5 rounded-full translate-y-1/2" />
+                    {/* Background image */}
+                    <img
+                      src={slide.image}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                    {/* Gradient overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${slide.overlay}`} />
                     <div className="absolute right-8 bottom-8 opacity-10 hidden sm:block">
                       <slide.icon className="w-32 h-32 text-white" />
                     </div>
