@@ -219,7 +219,7 @@ export default function Marketplace() {
     else products.sort((a, b) => ((b as any)._created_at || '').localeCompare((a as any)._created_at || ''));
 
     return products;
-  }, [allProducts, activeCategorySlugs, searchCategory, search, isSearching, searchSort]);
+  }, [allProducts, activeCategorySlugs, searchCategory, search, isSearching, searchSort, priceRange]);
 
   return (
     <div className="min-h-screen bg-background">
