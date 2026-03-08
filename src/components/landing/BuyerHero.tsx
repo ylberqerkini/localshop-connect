@@ -68,7 +68,7 @@ const BuyerHero = () => {
   const [featuredProducts, setFeaturedProducts] = useState<ProductPreview[]>([]);
   const [dealProducts, setDealProducts] = useState<ProductPreview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [api, setApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
