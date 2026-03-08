@@ -184,13 +184,6 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefoni</FormLabel>
-                <FormControl><Input placeholder="+355 6X XXX XXXX" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
             <FormField control={form.control} name="country" render={({ field }) => (
               <FormItem>
                 <FormLabel>Shteti</FormLabel>
@@ -205,6 +198,18 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
                     <SelectItem value="Shqipëri">Shqipëri</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefoni</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={form.watch('country') === 'Kosovë' ? '+383 4X XXX XXX' : '+355 6X XXX XXXX'}
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
