@@ -206,7 +206,7 @@ export function CheckoutForm({ open, onClose, businessId, deliveryFee }: Checkou
                 <FormLabel>Telefoni</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={form.watch('country') === 'Kosovë' ? '+383 4X XXX XXX' : '+355 6X XXX XXXX'}
+                    placeholder={form.watch('country') === 'Kosovë' ? '+383 XXX XXX XXX' : '+355 6X XXX XXXX'}
                     {...field}
                   />
                 </FormControl>
