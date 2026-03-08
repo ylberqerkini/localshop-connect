@@ -53,6 +53,9 @@ const Navbar = ({ view = "buyer", onViewChange }: NavbarProps) => {
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Ndrysho temën">
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             {onViewChange && (
               <Button
                 variant="outline"
