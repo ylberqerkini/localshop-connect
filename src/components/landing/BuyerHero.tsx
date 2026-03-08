@@ -111,7 +111,8 @@ const BuyerHero = () => {
         price: p.price,
         image_url: p.image_url,
         badge: p.badge,
-        business_subdomain: bizMap[p.business_id] || "",
+        business_subdomain: bizMap[p.business_id]?.subdomain || "",
+        business_name: bizMap[p.business_id]?.name || "",
       });
 
       setFeaturedProducts((featuredRes.data || []).map(mapProduct));
