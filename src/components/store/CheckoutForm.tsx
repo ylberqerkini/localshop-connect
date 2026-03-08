@@ -12,6 +12,7 @@ import { useCart } from '@/hooks/useCart';
 import { CouponInput } from './CouponInput';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2, 'Emri duhet të ketë të paktën 2 karaktere').max(100),
