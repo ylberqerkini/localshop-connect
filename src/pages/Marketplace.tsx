@@ -268,6 +268,24 @@ export default function Marketplace() {
               </Select>
             </div>
 
+            {/* Price Range Slider */}
+            <div className="max-w-3xl mx-auto mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">Çmimi</span>
+                <span className="text-sm text-muted-foreground">
+                  €{priceRange[0]} – €{priceRange[1]}
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={maxPrice}
+                step={1}
+                value={priceRange}
+                onValueChange={(val) => setPriceRange(val as [number, number])}
+                className="w-full"
+              />
+            </div>
+
             {roots.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2">
                 <Button variant={activeCategory === null ? 'default' : 'outline'} size="sm" onClick={() => setActiveCategory(null)} className="rounded-full">Të gjitha</Button>
