@@ -71,3 +71,41 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Deploying to Hostinger
+
+This project is a React Single Page Application (SPA) and requires a few steps to deploy correctly on Hostinger's Apache-based hosting.
+
+### Step 1: Build the project
+
+Create a `.env` file based on `.env.example` and fill in your Supabase credentials, then run:
+
+```sh
+npm install
+npm run build
+```
+
+This generates a `dist/` folder containing the production-ready files.
+
+### Step 2: Upload to Hostinger
+
+1. Log in to your Hostinger control panel (hPanel).
+2. Open **File Manager** and navigate to the `public_html` directory (or your subdomain's root folder).
+3. Upload **all files** from the `dist/` folder into that directory.
+   - Make sure `.htaccess` is included — it is required for client-side routing to work.
+
+### Step 3: Verify `.htaccess` is present
+
+The `public/.htaccess` file (copied to `dist/.htaccess` during build) tells Apache to redirect all requests to `index.html` so React Router handles navigation. Without it, directly visiting URLs like `/dashboard` or `/marketplace` will return a 404 error.
+
+If you don't see `.htaccess` in File Manager, enable "Show hidden files" and re-upload it.
+
+### Step 4: Set environment variables
+
+Because Hostinger shared hosting does not support server-side environment variables, the Supabase credentials are embedded into the build at compile time via `VITE_*` variables. Make sure your `.env` file is correctly configured **before** running `npm run build`.
+
+You can find your Supabase credentials in the [Supabase Dashboard](https://supabase.com/dashboard) under **Project Settings → API**:
+
+- `VITE_SUPABASE_PROJECT_ID` — your project's Reference ID
+- `VITE_SUPABASE_URL` — the Project URL (e.g. `https://xxxx.supabase.co`)
+- `VITE_SUPABASE_PUBLISHABLE_KEY` — the `anon` / public API key
