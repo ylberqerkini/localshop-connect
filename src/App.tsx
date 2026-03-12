@@ -69,7 +69,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter basename="/localshop-connect">
             <Routes>
               {/* Public */}
               <Route path="/" element={<Index />} />
